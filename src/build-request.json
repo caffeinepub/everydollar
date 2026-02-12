@@ -1,0 +1,150 @@
+{
+  "kind": "build_request",
+  "title": "Integrate CoinGecko for crypto search, live quotes, and historical charts (enable ICP & MINA)",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-20",
+      "text": "Add backend support for CoinGecko-powered crypto ticker search that returns structured results for crypto assets (e.g., ICP, MINA) and can be merged with existing Yahoo Finance search results for a unified autocomplete dropdown.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-3",
+          "msg-7",
+          "msg-10"
+        ],
+        "quotes": [
+          "I can't add ICP (Internet Computer Protocol or MINA, popular cryptos",
+          "Yes (find a free API, probably CoinGecko, to pull in crypto data from also)",
+          "Pull crypto from CoinGecko"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend exposes a query/search function that can return CoinGecko crypto matches for a user-entered query string.",
+        "Searching for \"ICP\" and \"MINA\" returns at least one crypto result each when CoinGecko has those assets.",
+        "Search results include enough fields for the frontend dropdown to display symbol and name and to identify the result type as crypto."
+      ]
+    },
+    {
+      "id": "REQ-21",
+      "text": "Add backend support for CoinGecko-powered crypto live pricing so crypto holdings and ticker preview pages do not depend on Yahoo Finance HTML parsing for crypto symbols.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-10"
+        ],
+        "quotes": [
+          "Pull crypto from CoinGecko"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend exposes a function to fetch the latest price and 24h change (absolute and percent) for a crypto asset using CoinGecko data.",
+        "If the frontend requests live quotes for a crypto asset such as ICP or MINA, the backend returns a populated price, change, changePercent, and currency without calling Yahoo for that crypto asset.",
+        "Failures to fetch CoinGecko data return a controlled error (no traps that crash unrelated flows)."
+      ]
+    },
+    {
+      "id": "REQ-22",
+      "text": "Add backend support for CoinGecko-powered crypto historical price data (chart time series) for the same selectable ranges used by the app, so crypto charts do not rely on Yahoo historical endpoints.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-10"
+        ],
+        "quotes": [
+          "For BOTH"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend exposes a function that returns a time series of historical price points for a given crypto asset and requested range.",
+        "Ticker preview and portfolio performance chart data requests for crypto assets can be fulfilled from CoinGecko without Yahoo.",
+        "Returned historical points are sorted ascending by timestamp and are suitable for direct charting."
+      ]
+    },
+    {
+      "id": "REQ-23",
+      "text": "Update frontend market-data hooks to use CoinGecko-backed backend endpoints for crypto search, live quotes, and historical data while continuing to use Yahoo-backed endpoints for stocks/ETFs.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-10",
+          "msg-12"
+        ],
+        "quotes": [
+          "Pull crypto from CoinGecko",
+          "bREAK IT DOWN AND IMPLEMENT"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Autocomplete queries display a unified list that can include both Yahoo (stocks/ETFs) and CoinGecko (crypto) results.",
+        "Live quote fetching supports a mixed list of holdings containing both crypto and non-crypto assets and uses the correct backend path per asset type.",
+        "Historical data fetching uses CoinGecko for crypto assets and Yahoo for non-crypto assets."
+      ]
+    },
+    {
+      "id": "REQ-24",
+      "text": "Update the ticker selection flow (global ticker search in the top navigation and Add Holding modal) so selecting a crypto result sets an appropriate symbol representation for the app and marks the holding/ticker as crypto without requiring users to type a Yahoo-style “-USD” suffix.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6",
+          "msg-10"
+        ],
+        "quotes": [
+          "I'm not enterning the -USD bit",
+          "Pull crypto from CoinGecko"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Typing and selecting \"ICP\" in the typeahead allows adding ICP as a holding successfully.",
+        "Typing and selecting \"MINA\" in the typeahead allows adding MINA as a holding successfully.",
+        "The holding created for a crypto selection has assetType set to a crypto value (e.g., \"Crypto\") and persists through reload.",
+        "The UI does not require or auto-insert a “-USD” suffix for crypto tickers."
+      ]
+    },
+    {
+      "id": "REQ-25",
+      "text": "Update relevant pages (Dashboard, Portfolio Detail, Public Portfolio, and Ticker Preview) so crypto holdings and crypto ticker previews display current price and charts using CoinGecko data, with existing loading skeleton behavior preserved.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-10"
+        ],
+        "quotes": [
+          "For BOTH"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Dashboard portfolio values and daily change calculations work when portfolios include crypto holdings sourced from CoinGecko quotes.",
+        "Portfolio detail holdings table, allocation chart, and derived metrics render for crypto holdings using CoinGecko quotes.",
+        "Ticker preview page for ICP and MINA shows a current price card and a 30-day chart using CoinGecko historical data.",
+        "Primary loading states remain skeleton-based (no new spinners)."
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain a single Motoko actor in backend/main.mo (no additional backend services).",
+    "Do not edit files under frontend/src/components/ui or any immutablePaths listed in SYSTEM_CONTEXT.",
+    "User-facing text added or changed must be in English."
+  ],
+  "nonGoals": [
+    "Adding third-party authentication methods other than Internet Identity.",
+    "Adding external databases or non-IC storage.",
+    "Implementing real-time streaming prices beyond the existing polling refresh behavior.",
+    "Expanding crypto support to on-chain wallet balances or transactions."
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
+  }
+}

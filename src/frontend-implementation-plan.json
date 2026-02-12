@@ -1,0 +1,97 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "CoinGecko-backed crypto search, quotes, and charts wired through existing UI flows (ICP & MINA)",
+  "requirements": [
+    {
+      "id": "REQ-23",
+      "summary": "Update market-data hooks to fetch crypto search/quotes/history via CoinGecko-backed backend functions while keeping Yahoo-backed flows for non-crypto.",
+      "acceptanceCriteria": [
+        "Autocomplete queries display a unified list that can include both Yahoo (stocks/ETFs) and CoinGecko (crypto) results.",
+        "Live quote fetching supports a mixed list of holdings containing both crypto and non-crypto assets and uses the correct backend path per asset type.",
+        "Historical data fetching uses CoinGecko for crypto assets and Yahoo for non-crypto assets."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useMarketData.ts",
+          "operation": "modify",
+          "description": "Update hooks to (1) merge Yahoo + CoinGecko search results into a unified result set, (2) fetch live quotes using Yahoo for non-crypto and getCryptoLivePrice for crypto, and (3) fetch historical series using Yahoo for non-crypto and getCryptoHistoricalData for crypto; include lightweight in-memory caching for resolving crypto symbol -> cryptoId when needed, and keep skeleton-driven loading behavior unchanged."
+        },
+        {
+          "path": "frontend/src/lib/symbols.ts",
+          "operation": "modify",
+          "description": "Remove/relax Yahoo-specific crypto symbol normalization (no forced “-USD” suffix) and add parsers/helpers for CoinGecko-backed backend payloads (crypto search, live price, historical series) plus utilities to identify/label results as crypto and to resolve cryptoId for known symbols like ICP and MINA."
+        },
+        {
+          "path": "frontend/src/components/market/TickerTypeahead.tsx",
+          "operation": "modify",
+          "description": "Wire the typeahead to render the unified autocomplete results (stocks/ETFs + crypto), displaying symbol + name + type, and ensure selection passes enough information (e.g., asset type and cryptoId when available) for downstream flows while preserving existing skeleton dropdown loading states."
+        }
+      ]
+    },
+    {
+      "id": "REQ-24",
+      "summary": "Update ticker selection in TopNav search and Add Holding modal so selecting crypto sets a crypto asset type and uses a plain symbol (no “-USD” suffix).",
+      "acceptanceCriteria": [
+        "Typing and selecting \"ICP\" in the typeahead allows adding ICP as a holding successfully.",
+        "Typing and selecting \"MINA\" in the typeahead allows adding MINA as a holding successfully.",
+        "The holding created for a crypto selection has assetType set to a crypto value (e.g., \"Crypto\") and persists through reload.",
+        "The UI does not require or auto-insert a “-USD” suffix for crypto tickers."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/market/TickerTypeahead.tsx",
+          "operation": "modify",
+          "description": "Change the typeahead selection contract from returning only a symbol to returning the selected unified result (including symbol, display name, and crypto vs non-crypto classification and cryptoId when present) so callers can persist assetType without relying on “-USD” conventions."
+        },
+        {
+          "path": "frontend/src/components/layout/TopNav.tsx",
+          "operation": "modify",
+          "description": "Update the global ticker search selection handler to consume the new typeahead selection shape and navigate using the displayed symbol (e.g., “ICP”, “MINA”) without appending or requiring “-USD”."
+        },
+        {
+          "path": "frontend/src/components/portfolio/AddEditHoldingModal.tsx",
+          "operation": "modify",
+          "description": "Update Add Holding flow to (1) set holding.assetType automatically from the selected typeahead result (e.g., “Crypto” vs “Stock”), (2) store the holding ticker as the plain symbol for crypto (e.g., “ICP”, “MINA”), and (3) keep existing form validation and toast messaging unchanged."
+        }
+      ]
+    },
+    {
+      "id": "REQ-25",
+      "summary": "Ensure Dashboard, Portfolio Detail, Public Portfolio, and Ticker Preview use CoinGecko data for crypto holdings/previews while preserving existing skeleton loading states.",
+      "acceptanceCriteria": [
+        "Dashboard portfolio values and daily change calculations work when portfolios include crypto holdings sourced from CoinGecko quotes.",
+        "Portfolio detail holdings table, allocation chart, and derived metrics render for crypto holdings using CoinGecko quotes.",
+        "Ticker preview page for ICP and MINA shows a current price card and a 30-day chart using CoinGecko historical data.",
+        "Primary loading states remain skeleton-based (no new spinners)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/DashboardPage.tsx",
+          "operation": "modify",
+          "description": "Update live-quote fetching to pass asset metadata (ticker + assetType) derived from holdings so mixed portfolios (crypto + non-crypto) fetch quotes from the correct backend capability, while leaving existing skeleton-driven page loading intact."
+        },
+        {
+          "path": "frontend/src/pages/PortfolioDetailPage.tsx",
+          "operation": "modify",
+          "description": "Update live-quote fetching to provide the holdings’ assetType to the market-data hook (so crypto holdings pull CoinGecko prices) and ensure derived metrics (total value, daily change) continue to compute correctly with the returned quote set."
+        },
+        {
+          "path": "frontend/src/pages/PublicPortfolioPage.tsx",
+          "operation": "modify",
+          "description": "Update public portfolio quote fetching to include holdings’ assetType so crypto holdings render with CoinGecko-sourced prices/charts, keeping the current skeleton loading behavior."
+        },
+        {
+          "path": "frontend/src/pages/TickerPreviewPage.tsx",
+          "operation": "modify",
+          "description": "Update ticker preview to resolve whether the viewed symbol is crypto (and its cryptoId when needed) and then fetch current price + 30-day history using CoinGecko-backed backend functions for ICP/MINA (and other cryptos), while preserving the existing skeleton placeholders for loading."
+        },
+        {
+          "path": "frontend/src/components/charts/PerformanceLineChart.tsx",
+          "operation": "modify",
+          "description": "Update performance chart data fetching to accept/derive the primary asset’s type (crypto vs non-crypto) so the historical series source matches the asset (CoinGecko for crypto, Yahoo for non-crypto) without changing the UI range tabs or skeleton loading state."
+        }
+      ]
+    }
+  ]
+}

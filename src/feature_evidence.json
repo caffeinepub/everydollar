@@ -1,0 +1,73 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-update-frontend-market-data-hooks-to-use-coingecko-backed-backend-endpoints-for-crypto-search-live-quotes-and-historical-data-while-continuing-to-use-yahoo-backed-endpoints-for-stocks-etfs",
+      "featureTitle": "Update frontend market-data hooks to use CoinGecko-backed backend endpoints for crypto search, live quotes, and historical data while continuing to use Yahoo-backed endpoints for stocks/ETFs.",
+      "files": [
+        "frontend/src/components/market/TickerTypeahead.tsx",
+        "frontend/src/hooks/useMarketData.ts",
+        "frontend/src/lib/symbols.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-23"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-ticker-selection-flow-global-ticker-search-in-the-top-navigation-and-add-holding-modal-so-selecting-a-crypto-result-sets-an-appropriate-symbol-representation-for-the-app-and-marks-the-holding-ticker-as-crypto-without-requiring-users-to-type-a-yahoo-style-usd-suffix",
+      "featureTitle": "Update the ticker selection flow (global ticker search in the top navigation and Add Holding modal) so selecting a crypto result sets an appropriate symbol representation for the app and marks the holding/ticker as crypto without requiring users to type a Yahoo-style “-USD” suffix.",
+      "files": [
+        "frontend/src/components/layout/TopNav.tsx",
+        "frontend/src/components/market/TickerTypeahead.tsx",
+        "frontend/src/components/portfolio/AddEditHoldingModal.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-24"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-relevant-pages-dashboard-portfolio-detail-public-portfolio-and-ticker-preview-so-crypto-holdings-and-crypto-ticker-previews-display-current-price-and-charts-using-coingecko-data-with-existing-loading-skeleton-behavior-preserved",
+      "featureTitle": "Update relevant pages (Dashboard, Portfolio Detail, Public Portfolio, and Ticker Preview) so crypto holdings and crypto ticker previews display current price and charts using CoinGecko data, with existing loading skeleton behavior preserved.",
+      "files": [
+        "frontend/src/components/charts/PerformanceLineChart.tsx",
+        "frontend/src/pages/DashboardPage.tsx",
+        "frontend/src/pages/PortfolioDetailPage.tsx",
+        "frontend/src/pages/PublicPortfolioPage.tsx",
+        "frontend/src/pages/TickerPreviewPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "http-outcalls@3.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-25"
+      ],
+      "confidence": "high"
+    }
+  ]
+}
