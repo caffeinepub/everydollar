@@ -1,12 +1,18 @@
+import { useEffect } from 'react';
 import { useGetPublicPortfolio } from '../hooks/useQueries';
 import { useLiveQuotes, AssetMetadata } from '../hooks/useMarketData';
+import { usePortfolioSimulation } from '../hooks/usePortfolioSimulation';
+import { computeSimulatedQuotes } from '../lib/simulationQuotes';
 import HoldingsTable from '../components/portfolio/HoldingsTable';
 import AllocationDonutChart from '../components/charts/AllocationDonutChart';
 import PerformanceLineChart from '../components/charts/PerformanceLineChart';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { calculatePortfolioMetrics } from '../lib/portfolioMath';
-import { Lock } from 'lucide-react';
+import { Lock, FlaskConical, RotateCcw } from 'lucide-react';
 
 interface PublicPortfolioPageProps {
   owner: string;
@@ -16,12 +22,36 @@ interface PublicPortfolioPageProps {
 export default function PublicPortfolioPage({ owner, portfolioName }: PublicPortfolioPageProps) {
   const { data: portfolio, isLoading, isError, error } = useGetPublicPortfolio(owner, portfolioName);
 
+  const {
+    simulationEnabled,
+    globalMovePercent,
+    priceOverrides,
+    toggleSimulation,
+    setGlobalMovePercent,
+    setOverridePrice,
+    resetSimulation,
+    clearSimulation,
+  } = usePortfolioSimulation();
+
+  // Clear simulation when portfolio changes
+  useEffect(() => {
+    clearSimulation();
+  }, [owner, portfolioName, clearSimulation]);
+
   const assets: AssetMetadata[] = portfolio?.holdings.map(h => ({
     ticker: h.ticker,
     assetType: h.assetType,
   })) || [];
 
-  const { data: quotes = [] } = useLiveQuotes(assets, assets.length > 0);
+  const { data: liveQuotes = [] } = useLiveQuotes(assets, assets.length > 0);
+
+  // Compute effective quotes (simulated or live)
+  const effectiveQuotes = simulationEnabled && portfolio
+    ? computeSimulatedQuotes(portfolio.holdings, liveQuotes, {
+        globalMovePercent,
+        priceOverrides,
+      })
+    : liveQuotes;
 
   if (isLoading) {
     return (
@@ -46,17 +76,34 @@ export default function PublicPortfolioPage({ owner, portfolioName }: PublicPort
     );
   }
 
-  const metrics = calculatePortfolioMetrics(portfolio, quotes);
+  const metrics = calculatePortfolioMetrics(portfolio, effectiveQuotes);
   const primaryHolding = portfolio.holdings[0];
 
   return (
     <div className="container mx-auto p-6 max-w-7xl space-y-6">
       {/* Header */}
       <div className="border-b border-border pb-6">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-          <span>Public Portfolio</span>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>Public Portfolio</span>
+          </div>
+          <Button
+            variant={simulationEnabled ? 'default' : 'outline'}
+            size="sm"
+            onClick={toggleSimulation}
+          >
+            <FlaskConical className="mr-2 h-4 w-4" />
+            {simulationEnabled ? 'Exit Simulation' : 'Simulate'}
+          </Button>
         </div>
-        <h1 className="text-3xl font-bold mb-2">{portfolio.name}</h1>
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-3xl font-bold">{portfolio.name}</h1>
+          {simulationEnabled && (
+            <span className="px-2 py-1 text-xs font-medium bg-accent text-accent-foreground rounded-md">
+              SIMULATION MODE
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-4">
           <div className="text-4xl font-bold">
             ${metrics.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -67,6 +114,46 @@ export default function PublicPortfolioPage({ owner, portfolioName }: PublicPort
         </div>
       </div>
 
+      {/* Simulation Controls */}
+      {simulationEnabled && (
+        <Card className="border-accent">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Simulation Controls</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetSimulation}
+              >
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Reset
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-end gap-4">
+                <div className="flex-1">
+                  <Label htmlFor="global-move">Global Market Move (%)</Label>
+                  <Input
+                    id="global-move"
+                    type="number"
+                    step="0.1"
+                    value={globalMovePercent}
+                    onChange={(e) => setGlobalMovePercent(parseFloat(e.target.value) || 0)}
+                    placeholder="e.g., -5 for -5%, +10 for +10%"
+                    className="mt-1"
+                  />
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Set individual prices below to override global move for specific holdings
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Holdings Table */}
       <Card>
         <CardHeader>
@@ -75,8 +162,11 @@ export default function PublicPortfolioPage({ owner, portfolioName }: PublicPort
         <CardContent>
           <HoldingsTable
             portfolio={portfolio}
-            quotes={quotes}
+            quotes={effectiveQuotes}
             readOnly={true}
+            simulationEnabled={simulationEnabled}
+            priceOverrides={priceOverrides}
+            onSetOverridePrice={setOverridePrice}
           />
         </CardContent>
       </Card>
@@ -88,7 +178,7 @@ export default function PublicPortfolioPage({ owner, portfolioName }: PublicPort
             <CardTitle>Allocation</CardTitle>
           </CardHeader>
           <CardContent>
-            <AllocationDonutChart portfolio={portfolio} quotes={quotes} />
+            <AllocationDonutChart portfolio={portfolio} quotes={effectiveQuotes} />
           </CardContent>
         </Card>
 

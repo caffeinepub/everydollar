@@ -9,6 +9,7 @@ import TickerPreviewPage from './pages/TickerPreviewPage';
 import AppLayout from './components/layout/AppLayout';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from 'next-themes';
+import { PublicThemeProvider } from './components/theme/PublicThemeProvider';
 
 type Route = 
   | { type: 'dashboard' }
@@ -60,36 +61,36 @@ function App() {
   const isAuthenticated = !!identity;
   const isInitializing = loginStatus === 'initializing';
 
-  // Public routes don't require authentication
+  // Public routes don't require authentication - FORCED LIGHT MODE
   if (route.type === 'public') {
     return (
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <PublicThemeProvider>
         <div className="min-h-screen bg-background">
           <PublicPortfolioPage owner={route.owner} portfolioName={route.portfolio} />
           <Toaster />
         </div>
-      </ThemeProvider>
+      </PublicThemeProvider>
     );
   }
 
-  // Show loading state during initialization
+  // Show loading state during initialization - FORCED LIGHT MODE
   if (isInitializing) {
     return (
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <PublicThemeProvider>
         <div className="min-h-screen bg-background flex items-center justify-center">
           <div className="text-center space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
             <p className="text-muted-foreground">Loading...</p>
           </div>
         </div>
-      </ThemeProvider>
+      </PublicThemeProvider>
     );
   }
 
-  // Show login screen if not authenticated
+  // Show login screen if not authenticated - FORCED LIGHT MODE
   if (!isAuthenticated) {
     return (
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <PublicThemeProvider>
         <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
           <div className="max-w-md w-full space-y-8 text-center">
             <div className="space-y-4">
@@ -108,11 +109,11 @@ function App() {
             </div>
           </div>
         </div>
-      </ThemeProvider>
+      </PublicThemeProvider>
     );
   }
 
-  // Authenticated routes
+  // Authenticated routes - keep existing dark theme behavior
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <AppLayout>

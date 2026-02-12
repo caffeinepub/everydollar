@@ -1,69 +1,39 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T21:50:57.697Z",
-  "summary": "Frontend was updated to integrate CoinGecko-backed flows (unified search, crypto live quotes, crypto historical data routing) via new parsing/mapping utilities and updated pages/components. However, the backend diff excerpt only shows Yahoo endpoints and does not provide evidence that the required CoinGecko backend endpoints were implemented in backend/main.mo.",
+  "generatedAt": "2026-02-12T23:12:08.594Z",
+  "summary": "Implemented a dedicated PublicThemeProvider that forces light mode and wrapped public portfolio, initializing, and unauthenticated/login UI branches with it. However, the diff for authenticated routes is truncated, so it’s not fully verifiable that authenticated theme behavior remains unchanged. Some additional project metadata/documentation files were modified/added that were not requested by the BuildRequest.",
   "missing_requirements": [
     {
-      "id": "REQ-20",
-      "requirement": "Backend support for CoinGecko-powered crypto ticker search (query/search function returning structured crypto matches for unified autocomplete).",
-      "reason": "Frontend calls a new backend method `searchCryptoTickers(query)`, but the provided backend/main.mo diff excerpt only shows Yahoo search (`searchTickers`) and does not show any CoinGecko search endpoint implementation.",
+      "id": "REQ-1",
+      "requirement": "Authenticated routes continue to use the existing theme behavior (including the current dark default and any in-app theme toggle behavior).",
+      "reason": "The authenticated-route return branch in App.tsx is truncated in the diff summary, so it cannot be confirmed from the provided evidence that authenticated routes still use the prior ThemeProvider configuration and behavior.",
       "evidence": [
-        "backend/main.mo (truncated)",
-        "frontend/src/hooks/useMarketData.ts"
-      ]
-    },
-    {
-      "id": "REQ-21",
-      "requirement": "Backend support for CoinGecko-powered crypto live pricing (latest price + 24h change absolute/percent) with controlled error handling (no traps).",
-      "reason": "Frontend calls a new backend method `getCryptoLivePrice(cryptoId)` and expects CoinGecko-shaped JSON for `parseCryptoLivePrice`, but the backend excerpt does not show this method or CoinGecko HTTP outcall logic / error handling.",
-      "evidence": [
-        "backend/main.mo (truncated)",
-        "frontend/src/hooks/useMarketData.ts",
-        "frontend/src/lib/symbols.ts (truncated)"
-      ]
-    },
-    {
-      "id": "REQ-22",
-      "requirement": "Backend support for CoinGecko-powered crypto historical price time series for app ranges, sorted ascending and suitable for charting.",
-      "reason": "Frontend references `useHistoricalData` routing to CoinGecko for crypto (via parsing helpers like `parseCryptoHistorical` and range mapping), but the backend excerpt only shows Yahoo historical (`fetchHistoricalData`) and does not show any CoinGecko historical endpoint.",
-      "evidence": [
-        "backend/main.mo (truncated)",
-        "frontend/src/hooks/useMarketData.ts",
-        "frontend/src/lib/symbols.ts (truncated)"
+        "frontend/src/App.tsx (truncated at \"// Authenticated routes - keep existing dark theme behavior\")"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Synthetic/random fallback market data generation for Yahoo quote and historical parsing.",
-      "reason": "BuildRequest focuses on integrating CoinGecko for crypto; adding randomized fallback values for Yahoo parsing is not requested and could mask real parsing failures.",
+      "description": "Added/modified project metadata tracking file (project_state.json) describing feature requests and statuses.",
+      "reason": "The BuildRequest only asks for frontend theme behavior changes; it does not request introducing or updating a project state tracking file.",
       "evidence": [
-        "frontend/src/lib/symbols.ts (truncated)"
+        "project_state.json"
       ]
     },
     {
-      "description": "Added backend state map `userCryptoHoldings` separate from portfolios/holdings.",
-      "reason": "Not mentioned in requirements; CoinGecko integration does not require introducing a separate crypto holdings storage map (and it’s not referenced in the shown frontend changes).",
+      "description": "Modified/generated frontend file summary documentation (frontend-file-summaries.txt).",
+      "reason": "The BuildRequest does not request documentation or inventory updates; only functional theme changes are specified.",
       "evidence": [
-        "backend/main.mo (truncated)"
+        "frontend-file-summaries.txt"
       ]
     }
   ],
-  "confidence": 0.66,
+  "confidence": 0.68,
   "changed_files": [
-    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/charts/PerformanceLineChart.tsx",
-    "frontend/src/components/layout/TopNav.tsx",
-    "frontend/src/components/market/TickerTypeahead.tsx",
-    "frontend/src/components/portfolio/AddEditHoldingModal.tsx",
-    "frontend/src/hooks/useMarketData.ts",
-    "frontend/src/lib/symbols.ts",
-    "frontend/src/pages/DashboardPage.tsx",
-    "frontend/src/pages/PortfolioDetailPage.tsx",
-    "frontend/src/pages/PublicPortfolioPage.tsx",
-    "frontend/src/pages/TickerPreviewPage.tsx",
+    "frontend/src/App.tsx",
+    "frontend/src/components/theme/PublicThemeProvider.tsx",
     "project_state.json"
   ]
 }

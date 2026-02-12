@@ -1,184 +1,26 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 7,
-  "summary": "Full-stack investment portfolio tracker web app (EveryDollar) with multi-portfolio management, detailed holdings/performance views, live market data (Yahoo Finance for stocks/ETFs via proxy; CoinGecko for all crypto) with auto-refresh, private authenticated storage, and optional per-portfolio public read-only pages.",
-  "architectural_notes": [
-    "Use Yahoo Finance data via a backend/proxy (e.g., canister) to avoid CORS; frontend calls proxy rather than Yahoo directly.",
-    "Store portfolios/holdings privately per authenticated user using Internet Identity.",
-    "Support optional per-portfolio public read-only pages via a toggle, exposing full holdings when enabled.",
-    "Implement ticker autocomplete/typeahead by calling a Yahoo Finance search endpoint via the backend/proxy (not directly from the browser) and reuse it for both global search and add-holding modal.",
-    "Use CoinGecko for all crypto functionality (search/autocomplete, live pricing, and historical time series) instead of Yahoo Finance; merge CoinGecko crypto suggestions into the unified ticker autocomplete dropdown alongside Yahoo-backed stocks/ETFs."
-  ],
+  "projectStateVersion": 3,
+  "summary": "New project",
+  "architectural_notes": [],
   "known_issues": [
-    "Cannot currently add certain cryptos (e.g., ICP, MINA) because they do not appear in the existing Yahoo-based autocomplete/search and the flow does not accept non “-USD” symbols."
+    "Deployment process failing with an unspecified deployment error; user requested retry but no error details provided"
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-implement-internet-identity-authentication-and-store-all-portfolios-holdings-privately-per-authenticated-user-principal",
-      "title": "Implement Internet Identity authentication and store all portfolios/holdings privately per authenticated user principal.",
+      "id": "feature-enforce-light-mode-no-dark-mode-and-no-system-theme-following-on-all-pages-that-are-accessible-without-authentication-including-the-public-portfolio-route-and-the-unauthenticated-login-initialization-screens",
+      "title": "Enforce Light Mode (no Dark Mode and no system theme following) on all pages that are accessible without authentication, including the public portfolio route and the unauthenticated/login + initialization screens.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-support-asset-types-in-holdings-for-us-stocks-major-crypto-e-g-btc-eth-and-etfs-using-the-same-ticker-entry-flow-with-any-required-yahoo-symbol-formatting-handled-consistently",
-      "title": "Support asset types in holdings for US stocks, major crypto (e.g., BTC, ETH), and ETFs using the same ticker-entry flow (with any required Yahoo symbol formatting handled consistently).",
+      "id": "feature-update-the-theme-provider-configuration-for-public-unauthenticated-routes-so-that-the-document-root-class-is-consistently-set-to-light-and-cannot-be-overridden-by-system-theme-or-persisted-theme-preference",
+      "title": "Update the theme provider configuration for public/unauthenticated routes so that the document root class is consistently set to `light` and cannot be overridden by system theme or persisted theme preference.",
       "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-multi-portfolio-management-create-rename-and-delete-multiple-named-portfolios-show-a-dashboard-with-an-overview-card-per-portfolio-and-navigation-into-a-detailed-portfolio-view",
-      "title": "Implement multi-portfolio management: create, rename, and delete multiple named portfolios; show a dashboard with an overview card per portfolio and navigation into a detailed portfolio view.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-a-portfolio-detail-page-with-a-holdings-table-containing-ticker-shares-units-average-cost-basis-current-price-market-value-day-change-total-return-and-of-portfolio",
-      "title": "Implement a portfolio detail page with a holdings table containing: ticker, shares/units, average cost basis, current price, market value, day change ($/%), total return ($/%), and % of portfolio.",
-      "reqIds": [
-        "REQ-5"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-holdings-management-via-modal-add-holding-search-by-ticker-remove-holding-and-edit-shares-units-and-cost-basis-for-an-existing-holding",
-      "title": "Add holdings management via modal: add holding (search by ticker), remove holding, and edit shares/units and cost basis for an existing holding.",
-      "reqIds": [
-        "REQ-6"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-portfolio-allocation-visualization-donut-pie-chart-showing-allocation-by-holding-based-on-current-market-value",
-      "title": "Add portfolio allocation visualization: donut/pie chart showing allocation by holding based on current market value.",
-      "reqIds": [
-        "REQ-7"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-portfolio-performance-visualization-line-chart-of-portfolio-performance-over-selectable-time-ranges-1d-1w-1m-3m-1y-using-yahoo-historical-data-via-the-proxy",
-      "title": "Add portfolio performance visualization: line chart of portfolio performance over selectable time ranges (1D, 1W, 1M, 3M, 1Y), using Yahoo historical data via the proxy.",
-      "reqIds": [
-        "REQ-8"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-live-price-refresh-auto-refresh-market-data-every-60-seconds-while-the-app-is-open-and-display-a-last-updated-x-seconds-ago-indicator",
-      "title": "Implement live price refresh: auto-refresh market data every 60 seconds while the app is open, and display a 'Last updated: X seconds ago' indicator.",
-      "reqIds": [
-        "REQ-9"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-per-portfolio-public-sharing-add-a-per-portfolio-toggle-make-portfolio-public-that-generates-a-public-read-only-url-public-pages-must-show-all-holdings-and-related-portfolio-data-while-preventing-edits",
-      "title": "Implement per-portfolio public sharing: add a per-portfolio toggle 'Make portfolio public' that generates a public read-only URL; public pages must show all holdings and related portfolio data while preventing edits.",
-      "reqIds": [
-        "REQ-10"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-create-the-global-layout-and-navigation-persistent-top-nav-with-app-logo-name-portfolio-switcher-dropdown-global-ticker-search-search-any-ticker-and-settings-icon-sidebar-listing-all-portfolios-with-current-total-value-and-daily-change",
-      "title": "Create the global layout and navigation: persistent top nav with app logo/name, portfolio switcher dropdown, global ticker search (search any ticker), and settings icon; sidebar listing all portfolios with current total value and daily change.",
-      "reqIds": [
-        "REQ-11"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-dark-mode-by-default-with-a-user-accessible-toggle-for-light-mode-ensure-responsive-layout-for-desktop-and-tablet",
-      "title": "Implement dark mode by default with a user-accessible toggle for light mode; ensure responsive layout for desktop and tablet.",
-      "reqIds": [
-        "REQ-12"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-use-loading-skeletons-not-blank-states-or-spinners-for-all-primary-data-fetching-surfaces-and-show-toast-notifications-for-success-error-actions",
-      "title": "Use loading skeletons (not blank states or spinners) for all primary data-fetching surfaces and show toast notifications for success/error actions.",
-      "reqIds": [
-        "REQ-13"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-apply-a-cohesive-sleek-data-rich-visual-theme-dark-forward-with-consistent-typography-spacing-and-component-styling-across-the-app-avoid-blue-purple-as-primary-brand-colors",
-      "title": "Apply a cohesive, sleek, data-rich visual theme (dark-forward) with consistent typography, spacing, and component styling across the app (avoid blue/purple as primary brand colors).",
-      "reqIds": [
-        "REQ-14"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-generate-and-include-a-simple-app-logo-image-asset-and-render-it-in-the-top-navigation",
-      "title": "Generate and include a simple app logo image asset and render it in the top navigation.",
-      "reqIds": [
-        "REQ-15"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-live-ticker-autocomplete-typeahead-in-the-global-ticker-search-in-the-top-navigation-so-that-as-the-user-types-a-dropdown-of-yahoo-finance-search-suggestions-appears-and-the-user-can-select-a-suggestion-to-populate-the-input-and-navigate-to-the-ticker-preview-page",
-      "title": "Implement live ticker autocomplete (typeahead) in the global ticker search in the top navigation so that as the user types, a dropdown of Yahoo Finance search suggestions appears and the user can select a suggestion to populate the input and navigate to the ticker preview page.",
-      "reqIds": [
-        "REQ-16"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-implement-live-ticker-autocomplete-typeahead-in-the-add-edit-holding-modal-ticker-search-input-so-that-suggestions-appear-as-the-user-types-with-selection-filling-the-selected-ticker-field-for-the-holding",
-      "title": "Implement live ticker autocomplete (typeahead) in the Add/Edit Holding modal ticker search input so that suggestions appear as the user types, with selection filling the selected ticker field for the holding.",
-      "reqIds": [
-        "REQ-17"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-backend-yahoo-search-proxy-used-for-ticker-autocomplete-to-call-a-live-yahoo-finance-search-endpoint-suitable-for-returning-structured-results-for-stocks-etfs-and-crypto-and-ensure-the-frontend-consumes-and-parses-those-results-reliably",
-      "title": "Update the backend Yahoo search proxy used for ticker autocomplete to call a live Yahoo Finance search endpoint suitable for returning structured results for stocks, ETFs, and crypto, and ensure the frontend consumes and parses those results reliably.",
-      "reqIds": [
-        "REQ-18"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-ux-safeguards-for-autocomplete-queries-to-avoid-excessive-network-calls-e-g-debounce-input-and-require-a-minimum-query-length-while-keeping-suggestions-responsive",
-      "title": "Add UX safeguards for autocomplete queries to avoid excessive network calls (e.g., debounce input and require a minimum query length) while keeping suggestions responsive.",
-      "reqIds": [
-        "REQ-19"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-frontend-market-data-hooks-to-use-coingecko-backed-backend-endpoints-for-crypto-search-live-quotes-and-historical-data-while-continuing-to-use-yahoo-backed-endpoints-for-stocks-etfs",
-      "title": "Update frontend market-data hooks to use CoinGecko-backed backend endpoints for crypto search, live quotes, and historical data while continuing to use Yahoo-backed endpoints for stocks/ETFs.",
-      "reqIds": [
-        "REQ-23"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-ticker-selection-flow-global-ticker-search-in-the-top-navigation-and-add-holding-modal-so-selecting-a-crypto-result-sets-an-appropriate-symbol-representation-for-the-app-and-marks-the-holding-ticker-as-crypto-without-requiring-users-to-type-a-yahoo-style-usd-suffix",
-      "title": "Update the ticker selection flow (global ticker search in the top navigation and Add Holding modal) so selecting a crypto result sets an appropriate symbol representation for the app and marks the holding/ticker as crypto without requiring users to type a Yahoo-style “-USD” suffix.",
-      "reqIds": [
-        "REQ-24"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-relevant-pages-dashboard-portfolio-detail-public-portfolio-and-ticker-preview-so-crypto-holdings-and-crypto-ticker-previews-display-current-price-and-charts-using-coingecko-data-with-existing-loading-skeleton-behavior-preserved",
-      "title": "Update relevant pages (Dashboard, Portfolio Detail, Public Portfolio, and Ticker Preview) so crypto holdings and crypto ticker previews display current price and charts using CoinGecko data, with existing loading skeleton behavior preserved.",
-      "reqIds": [
-        "REQ-25"
+        "REQ-2"
       ],
       "version": 1
     }
@@ -186,93 +28,12 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Multi-portfolio management (create/rename/delete) with dashboard overview cards (total value, daily P&L, total return %, sparkline) and portfolio detail navigation",
+      "summary": "Enforce light mode on all public pages",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Portfolio detail view: holdings table (ticker, shares, cost basis, prices, P&L/returns, % allocation), allocation donut/pie chart, and performance line chart with time ranges (1D, 1W, 1M, 3M, 1Y)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Holdings management: add/remove holdings via ticker-search modal; edit shares and cost basis per holding",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Live market data integration using Yahoo Finance (via yahoo-finance2) behind a proxy; support US stocks, major crypto, ETFs; show last-updated timestamp; auto-refresh prices every 60 seconds while app is open",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Authenticated private storage of portfolios/holdings per user (Internet Identity)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Per-portfolio public page option: toggle “Make portfolio public” to generate a public read-only URL showing all holdings and related portfolio data",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "User experience/UI: persistent top nav (logo/name, portfolio switcher, global ticker search, settings), sidebar portfolio list with value and daily change, dark mode default with toggle, responsive (desktop/tablet), loading skeletons, and toast notifications for actions/errors",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Create a Motoko-based Yahoo Finance proxy in the single backend actor that the frontend can call to fetch market data without browser CORS issues.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "Add ticker autocomplete (typeahead) using live Yahoo Finance search for all supported assets (US stocks, ETFs, major crypto) in both the global ticker search bar and the add-holding modal",
-      "reqIds": [],
-      "status": "in_progress"
-    },
-    {
-      "id": "AR-11",
-      "summary": "Integrate CoinGecko as the source for ALL crypto (search/autocomplete, live price, and historical charts), unify crypto into the existing ticker autocomplete/holdings flow, and ensure cryptos like ICP and MINA are addable without requiring Yahoo-style “-USD” tickers",
-      "reqIds": [],
-      "status": "in_progress"
-    },
-    {
-      "id": "AR-12",
-      "summary": "Add backend support for CoinGecko-powered crypto ticker search that returns structured results for crypto assets (e.g., ICP, MINA) and can be merged with existing Yahoo Finance search results for a unified autocomplete dropdown.",
-      "reqIds": [
-        "REQ-20"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-13",
-      "summary": "Add backend support for CoinGecko-powered crypto live pricing so crypto holdings and ticker preview pages do not depend on Yahoo Finance HTML parsing for crypto symbols.",
-      "reqIds": [
-        "REQ-21"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-14",
-      "summary": "Add backend support for CoinGecko-powered crypto historical price data (chart time series) for the same selectable ranges used by the app, so crypto charts do not rely on Yahoo historical endpoints.",
-      "reqIds": [
-        "REQ-22"
-      ],
       "status": "pending"
     }
   ],
-  "gameProjectType": "none",
-  "projectName": "EveryDollar",
+  "projectName": "Enforce light mode on all public (unauthenticated) pages",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }
