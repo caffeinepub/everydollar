@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
+import { waitForActor } from './actorReady';
 import type { Portfolio, Holding } from '../backend';
 import { Principal } from '@dfinity/principal';
 
@@ -22,8 +23,9 @@ export function useCreatePortfolio() {
 
   return useMutation({
     mutationFn: async (name: string) => {
-      if (!actor) throw new Error('Actor not available');
-      await actor.createPortfolio(name);
+      // Wait for actor to be ready if it's not immediately available
+      const readyActor = actor || await waitForActor(queryClient);
+      await readyActor.createPortfolio(name);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portfolios'] });

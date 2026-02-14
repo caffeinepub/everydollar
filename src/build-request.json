@@ -1,52 +1,35 @@
 {
   "kind": "build_request",
-  "title": "Enforce light mode on all public (unauthenticated) pages",
+  "title": "Make holdings search case-insensitive",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Enforce Light Mode (no Dark Mode and no system theme following) on all pages that are accessible without authentication, including the public portfolio route and the unauthenticated/login + initialization screens.",
+      "text": "Update the holdings search/filter logic so that matching holdings is case-insensitive (e.g., a query of \"icp\" must match a holding with ticker \"ICP\"). Apply this to any UI that filters holdings by a text query (at minimum, the portfolio holdings list/table filtering behavior).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "recent-messages-4"
         ],
         "quotes": [
-          "the request for enforcing light mode on all public pages is fully understood and ready whenever you want to apply it.. apply"
+          "searching for holdings should be case insensitive. If i type in \"icp,\" it should return the \"ICP\" holding, etc."
         ]
       },
       "acceptanceCriteria": [
-        "When visiting the public portfolio route (#/public/:owner/:portfolio), the UI renders in light theme even if the user previously selected dark mode or the OS is in dark mode.",
-        "When the app is in the unauthenticated state (login screen), the UI renders in light theme even if the user previously selected dark mode or the OS is in dark mode.",
-        "When the app is in the initializing/loading state, the UI renders in light theme even if the user previously selected dark mode or the OS is in dark mode.",
-        "Authenticated routes continue to use the existing theme behavior (including the current dark default and any in-app theme toggle behavior)."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Update the theme provider configuration for public/unauthenticated routes so that the document root class is consistently set to `light` and cannot be overridden by system theme or persisted theme preference.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "apply"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Theme provider for public/unauthenticated routes uses a forced light theme configuration (e.g., forcedTheme/light default + enableSystem disabled) so dark mode styling never applies on those routes.",
-        "No changes are made to immutable hook files (e.g., `frontend/src/hooks/useInternetIdentity.ts` and `frontend/src/hooks/useActor.ts`)."
+        "When a portfolio contains a holding with ticker \"ICP\", searching for \"icp\" returns/matches that holding.",
+        "Searching for \"ICP\" and \"icp\" yields identical results.",
+        "Partial matches are also case-insensitive (e.g., query \"ic\" matches \"ICP\" if partial matching is supported by the existing holdings search behavior).",
+        "No changes are required to how tickers are displayed (tickers should continue to render in their stored/original casing)."
       ]
     }
   ],
   "constraints": [
-    "Do not edit any files under the immutable paths listed in SYSTEM_CONTEXT (e.g., `frontend/src/hooks/useInternetIdentity.ts(x)`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`, and anything in `frontend/src/components/ui`).",
-    "Keep the backend as a single Motoko actor; no backend changes are required for this request."
+    "Do not modify any files under frontend/src/components/ui (compose existing UI components instead).",
+    "Do not modify any files listed as immutable in SYSTEM_CONTEXT (e.g., frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx)."
   ],
   "nonGoals": [
-    "Fixing the unspecified deployment error or implementing a deployment retry mechanism.",
-    "Changing theme behavior for authenticated pages (dashboard/portfolio/ticker) beyond what is required to keep them as-is."
+    "Adding new backend endpoints or changing backend storage for holdings tickers.",
+    "Changing the market ticker search (typeahead) behavior unless it is directly used for holdings filtering."
   ],
   "imageRequirements": {
     "required": [],

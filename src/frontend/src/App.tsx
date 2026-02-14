@@ -95,9 +95,9 @@ function App() {
           <div className="max-w-md w-full space-y-8 text-center">
             <div className="space-y-4">
               <img 
-                src="/assets/generated/everydollar-logo.dim_512x512.png" 
+                src="/assets/generated/app-logo.dim_512x512.png" 
                 alt="EveryDollar" 
-                className="h-24 w-24 mx-auto"
+                className="h-24 w-24 mx-auto object-contain"
               />
               <h1 className="text-4xl font-bold tracking-tight">EveryDollar</h1>
               <p className="text-lg text-muted-foreground">

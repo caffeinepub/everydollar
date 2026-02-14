@@ -2,6 +2,7 @@ import { navigate } from '../../App';
 import type { Portfolio } from '../../backend';
 import type { QuoteData } from '../../hooks/useMarketData';
 import { calculatePortfolioMetrics } from '../../lib/portfolioMath';
+import { formatSignedUSD } from '../../utils/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
@@ -35,7 +36,7 @@ export default function PortfolioCard({ portfolio, quotes }: PortfolioCardProps)
           </div>
           <div className={`text-sm flex items-center gap-1 mt-1 ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
             {isPositive ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
-            {isPositive ? '+' : ''}{metrics.dailyChange.toFixed(2)} ({metrics.dailyChangePercent.toFixed(2)}%)
+            {formatSignedUSD(metrics.dailyChange)} ({metrics.dailyChangePercent.toFixed(2)}%)
           </div>
         </div>
 

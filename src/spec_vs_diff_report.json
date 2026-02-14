@@ -1,39 +1,32 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T23:12:08.594Z",
-  "summary": "Implemented a dedicated PublicThemeProvider that forces light mode and wrapped public portfolio, initializing, and unauthenticated/login UI branches with it. However, the diff for authenticated routes is truncated, so it’s not fully verifiable that authenticated theme behavior remains unchanged. Some additional project metadata/documentation files were modified/added that were not requested by the BuildRequest.",
-  "missing_requirements": [
-    {
-      "id": "REQ-1",
-      "requirement": "Authenticated routes continue to use the existing theme behavior (including the current dark default and any in-app theme toggle behavior).",
-      "reason": "The authenticated-route return branch in App.tsx is truncated in the diff summary, so it cannot be confirmed from the provided evidence that authenticated routes still use the prior ThemeProvider configuration and behavior.",
-      "evidence": [
-        "frontend/src/App.tsx (truncated at \"// Authenticated routes - keep existing dark theme behavior\")"
-      ]
-    }
-  ],
+  "generatedAt": "2026-02-14T21:59:38.346Z",
+  "summary": "REQ-1 appears implemented for the portfolio holdings list/table: HoldingsTable now filters holdings using a case-insensitive helper (lowercased/trimmed includes match) without changing ticker display casing. No evidence of other holdings-filtering UIs being updated in the provided diff summary. There are additional unrequested changes (new generic search utility and project/meta files updates).",
+  "missing_requirements": [],
   "hallucinated_features": [
     {
-      "description": "Added/modified project metadata tracking file (project_state.json) describing feature requests and statuses.",
-      "reason": "The BuildRequest only asks for frontend theme behavior changes; it does not request introducing or updating a project state tracking file.",
+      "description": "Added a generic text-search utility module (normalizeText/matchesQuery) rather than implementing case-insensitive matching inline where needed.",
+      "reason": "BuildRequest only asks to make holdings filtering case-insensitive; it does not request creating new shared utility modules.",
       "evidence": [
-        "project_state.json"
+        "frontend/src/utils/textSearch.ts",
+        "frontend/src/components/portfolio/HoldingsTable.tsx"
       ]
     },
     {
-      "description": "Modified/generated frontend file summary documentation (frontend-file-summaries.txt).",
-      "reason": "The BuildRequest does not request documentation or inventory updates; only functional theme changes are specified.",
+      "description": "Updated/added repository meta/documentation/state files (frontend file summaries and project_state).",
+      "reason": "BuildRequest does not request changes to project tracking or summary files; these are not required to implement case-insensitive holdings filtering.",
       "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend-file-summaries.txt",
+        "project_state.json"
       ]
     }
   ],
-  "confidence": 0.68,
+  "confidence": 0.86,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/src/App.tsx",
-    "frontend/src/components/theme/PublicThemeProvider.tsx",
+    "frontend/src/components/portfolio/HoldingsTable.tsx",
+    "frontend/src/utils/textSearch.ts",
     "project_state.json"
   ]
 }

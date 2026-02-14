@@ -4,23 +4,15 @@
   "summary": "New project",
   "architectural_notes": [],
   "known_issues": [
-    "Deployment process failing with an unspecified deployment error; user requested retry but no error details provided"
+    "Holdings search is currently case-sensitive; lowercase queries (e.g., \"icp\") do not match uppercase holdings (e.g., \"ICP\")."
   ],
   "isFixRequest": true,
   "existing_features": [
     {
-      "id": "feature-enforce-light-mode-no-dark-mode-and-no-system-theme-following-on-all-pages-that-are-accessible-without-authentication-including-the-public-portfolio-route-and-the-unauthenticated-login-initialization-screens",
-      "title": "Enforce Light Mode (no Dark Mode and no system theme following) on all pages that are accessible without authentication, including the public portfolio route and the unauthenticated/login + initialization screens.",
+      "id": "feature-update-the-holdings-search-filter-logic-so-that-matching-holdings-is-case-insensitive-e-g-a-query-of-icp-must-match-a-holding-with-ticker-icp-apply-this-to-any-ui-that-filters-holdings-by-a-text-query-at-minimum-the-portfolio-holdings-list-table-filtering-behavior",
+      "title": "Update the holdings search/filter logic so that matching holdings is case-insensitive (e.g., a query of \"icp\" must match a holding with ticker \"ICP\"). Apply this to any UI that filters holdings by a text query (at minimum, the portfolio holdings list/table filtering behavior).",
       "reqIds": [
         "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-theme-provider-configuration-for-public-unauthenticated-routes-so-that-the-document-root-class-is-consistently-set-to-light-and-cannot-be-overridden-by-system-theme-or-persisted-theme-preference",
-      "title": "Update the theme provider configuration for public/unauthenticated routes so that the document root class is consistently set to `light` and cannot be overridden by system theme or persisted theme preference.",
-      "reqIds": [
-        "REQ-2"
       ],
       "version": 1
     }
@@ -28,12 +20,12 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Enforce light mode on all public pages",
+      "summary": "Make holdings search case-insensitive (e.g., \"icp\" matches \"ICP\")",
       "reqIds": [],
       "status": "pending"
     }
   ],
-  "projectName": "Enforce light mode on all public (unauthenticated) pages",
+  "projectName": "Make holdings search case-insensitive",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

@@ -1,39 +1,26 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T23:12:08.597Z",
+  "generatedAt": "2026-02-14T21:59:38.348Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 2,
+    "total": 1,
+    "implemented": 1,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Enforce Light Mode (no Dark Mode and no system theme following) on all pages that are accessible without authentication, including the public portfolio route and the unauthenticated/login + initialization screens.",
+        "summary": "Update the holdings search/filter logic so that matching holdings is case-insensitive (e.g., a query of \"icp\" must match a holding with ticker \"ICP\"). Apply this to any UI that filters holdings by a text query (at minimum, the portfolio holdings list/table filtering behavior).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/theme/PublicThemeProvider.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/utils/textSearch.ts",
+          "frontend/src/components/portfolio/HoldingsTable.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/theme/PublicThemeProvider.tsx",
-          "frontend/src/App.tsx"
-        ]
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Update the theme provider configuration for public/unauthenticated routes so that the document root class is consistently set to `light` and cannot be overridden by system theme or persisted theme preference.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/theme/PublicThemeProvider.tsx",
-          "frontend/src/App.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/theme/PublicThemeProvider.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/utils/textSearch.ts",
+          "frontend/src/components/portfolio/HoldingsTable.tsx"
         ]
       }
     ]
@@ -43,8 +30,8 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/App.tsx",
-    "frontend/src/components/theme/PublicThemeProvider.tsx",
+    "frontend/src/components/portfolio/HoldingsTable.tsx",
+    "frontend/src/utils/textSearch.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

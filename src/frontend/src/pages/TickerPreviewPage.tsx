@@ -33,14 +33,14 @@ export default function TickerPreviewPage({ symbol }: TickerPreviewPageProps) {
   }));
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/')}>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/')} className="shrink-0">
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-3xl font-bold">{symbol}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold break-all">{symbol}</h1>
         {cryptoId && (
-          <span className="text-sm text-muted-foreground">Crypto</span>
+          <span className="text-sm text-muted-foreground whitespace-nowrap">Crypto</span>
         )}
       </div>
 
@@ -49,14 +49,14 @@ export default function TickerPreviewPage({ symbol }: TickerPreviewPageProps) {
       ) : quote ? (
         <Card>
           <CardHeader>
-            <CardTitle>Current Price</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Current Price</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="text-4xl font-bold">
+              <div className="text-3xl sm:text-4xl font-bold break-words">
                 ${quote.price.toFixed(2)}
               </div>
-              <div className={`text-lg ${quote.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <div className={`text-base sm:text-lg ${quote.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {quote.change >= 0 ? '+' : ''}${quote.change.toFixed(2)} ({quote.changePercent.toFixed(2)}%)
               </div>
             </div>
@@ -72,24 +72,26 @@ export default function TickerPreviewPage({ symbol }: TickerPreviewPageProps) {
 
       <Card>
         <CardHeader>
-          <CardTitle>30-Day Chart</CardTitle>
+          <CardTitle className="text-base sm:text-lg">30-Day Chart</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-2 sm:p-6">
           {historyLoading ? (
-            <Skeleton className="h-80 w-full" />
+            <Skeleton className="h-64 sm:h-80 w-full" />
           ) : (
-            <ResponsiveContainer width="100%" height={320}>
-              <LineChart data={chartData}>
+            <ResponsiveContainer width="100%" height={280} className="sm:h-80">
+              <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(var(--border))" />
                 <XAxis
                   dataKey="date"
                   stroke="oklch(var(--muted-foreground))"
-                  fontSize={12}
+                  fontSize={11}
+                  tickMargin={8}
                 />
                 <YAxis
                   stroke="oklch(var(--muted-foreground))"
-                  fontSize={12}
+                  fontSize={11}
                   tickFormatter={(value) => `$${value.toFixed(0)}`}
+                  width={60}
                 />
                 <Tooltip
                   contentStyle={{

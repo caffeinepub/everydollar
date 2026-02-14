@@ -1,47 +1,27 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Force light theme on all public/unauthenticated screens",
+  "title": "Make portfolio holdings search case-insensitive",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Render public portfolio, login, and initializing screens in forced light mode regardless of OS/system theme or stored preference, while leaving authenticated routes unchanged.",
+      "summary": "Make holdings text filtering case-insensitive wherever holdings are filtered by a query (at minimum the holdings table/list).",
       "acceptanceCriteria": [
-        "When visiting the public portfolio route (#/public/:owner/:portfolio), the UI renders in light theme even if the user previously selected dark mode or the OS is in dark mode.",
-        "When the app is in the unauthenticated state (login screen), the UI renders in light theme even if the user previously selected dark mode or the OS is in dark mode.",
-        "When the app is in the initializing/loading state, the UI renders in light theme even if the user previously selected dark mode or the OS is in dark mode.",
-        "Authenticated routes continue to use the existing theme behavior (including the current dark default and any in-app theme toggle behavior)."
+        "When a portfolio contains a holding with ticker \"ICP\", searching for \"icp\" returns/matches that holding.",
+        "Searching for \"ICP\" and \"icp\" yields identical results.",
+        "Partial matches are also case-insensitive (e.g., query \"ic\" matches \"ICP\" if partial matching is supported by the existing holdings search behavior).",
+        "No changes are required to how tickers are displayed (tickers should continue to render in their stored/original casing)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/theme/PublicThemeProvider.tsx",
+          "path": "frontend/src/utils/textSearch.ts",
           "operation": "create",
-          "description": "Create a small wrapper around next-themes ThemeProvider that enforces light mode for public/unauthenticated screens only (forced light, no system)."
+          "description": "Add a small shared helper for case-insensitive text matching/normalization (e.g., normalize-to-lowercase + safe trimming) to keep holdings filtering consistent across the UI."
         },
         {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/components/portfolio/HoldingsTable.tsx",
           "operation": "modify",
-          "description": "Wrap the public portfolio route render, initialization/loading screen, and unauthenticated/login screen with the new PublicThemeProvider so these screens are always light, while keeping the existing ThemeProvider configuration for authenticated routes unchanged."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Configure the theme provider used by public/unauthenticated routes to consistently apply the `light` root class and prevent override by system theme or persisted preferences, without touching immutable hook files.",
-      "acceptanceCriteria": [
-        "Theme provider for public/unauthenticated routes uses a forced light theme configuration (e.g., forcedTheme/light default + enableSystem disabled) so dark mode styling never applies on those routes.",
-        "No changes are made to immutable hook files (e.g., `frontend/src/hooks/useInternetIdentity.ts` and `frontend/src/hooks/useActor.ts`)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/theme/PublicThemeProvider.tsx",
-          "operation": "modify",
-          "description": "Set next-themes provider options for public/unauthenticated routes to force `light` and disable system theme following, ensuring the document root class remains `light` even if a persisted preference exists."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Update the public/unauthenticated ThemeProvider usage to rely exclusively on PublicThemeProvider (forced light), ensuring no other theme configuration is applied to those route branches."
+          "description": "Update the holdings filtering logic to perform case-insensitive matching (use the new text search helper). Ensure the displayed ticker casing remains unchanged while the match comparison uses normalized strings."
         }
       ]
     }

@@ -95,13 +95,17 @@ export function useLiveQuotes(assets: (string | AssetMetadata)[], enabled = true
         })
       );
 
-      return results
+      // Extract successful results
+      const newQuotes = results
         .filter((r): r is PromiseFulfilledResult<QuoteData> => r.status === 'fulfilled')
         .map(r => r.value);
+
+      return newQuotes;
     },
     enabled: !!actor && !actorFetching && enabled && assets.length > 0,
-    refetchInterval: 60000,
+    refetchInterval: 300000, // 5 minutes
     staleTime: 50000,
+    placeholderData: (previousData) => previousData, // Keep showing previous data during refetch
   });
 }
 

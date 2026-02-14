@@ -3,6 +3,7 @@ import { useGetPortfolios } from '../hooks/useQueries';
 import { useLiveQuotes, AssetMetadata } from '../hooks/useMarketData';
 import { usePortfolioSimulation } from '../hooks/usePortfolioSimulation';
 import { computeSimulatedQuotes } from '../lib/simulationQuotes';
+import { formatSignedUSD } from '../utils/formatters';
 import HoldingsTable from '../components/portfolio/HoldingsTable';
 import AllocationDonutChart from '../components/charts/AllocationDonutChart';
 import PerformanceLineChart from '../components/charts/PerformanceLineChart';
@@ -19,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Plus, Trash2, FlaskConical, RotateCcw } from 'lucide-react';
 import { calculatePortfolioMetrics } from '../lib/portfolioMath';
+import type { Holding } from '../backend';
 
 interface PortfolioDetailPageProps {
   portfolioName: string;
@@ -32,6 +34,7 @@ export default function PortfolioDetailPage({ portfolioName }: PortfolioDetailPa
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedTicker, setSelectedTicker] = useState('');
+  const [editingHolding, setEditingHolding] = useState<Holding | undefined>(undefined);
 
   const {
     simulationEnabled,
@@ -66,17 +69,17 @@ export default function PortfolioDetailPage({ portfolioName }: PortfolioDetailPa
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-96 w-full" />
+      <div className="space-y-4 sm:space-y-6">
+        <Skeleton className="h-8 sm:h-10 w-48 sm:w-64" />
+        <Skeleton className="h-64 sm:h-96 w-full" />
       </div>
     );
   }
 
   if (!portfolio) {
     return (
-      <div className="text-center py-16">
-        <h1 className="text-2xl font-bold mb-4">Portfolio not found</h1>
+      <div className="text-center py-12 sm:py-16 px-4">
+        <h1 className="text-xl sm:text-2xl font-bold mb-4">Portfolio not found</h1>
         <p className="text-muted-foreground">The portfolio "{portfolioName}" does not exist.</p>
       </div>
     );
@@ -86,7 +89,8 @@ export default function PortfolioDetailPage({ portfolioName }: PortfolioDetailPa
   const primaryHolding = portfolio.holdings[0];
 
   const handleEdit = (ticker: string) => {
-    setSelectedTicker(ticker);
+    const holding = portfolio.holdings.find(h => h.ticker === ticker);
+    setEditingHolding(holding);
     setShowAddModal(true);
   };
 
@@ -95,45 +99,60 @@ export default function PortfolioDetailPage({ portfolioName }: PortfolioDetailPa
     setShowRemoveConfirm(true);
   };
 
+  const handleAddNew = () => {
+    setEditingHolding(undefined);
+    setShowAddModal(true);
+  };
+
+  const handleCloseAddModal = () => {
+    setShowAddModal(false);
+    setEditingHolding(undefined);
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold">{portfolio.name}</h1>
-            {simulationEnabled && (
-              <span className="px-2 py-1 text-xs font-medium bg-accent text-accent-foreground rounded-md">
-                SIMULATION MODE
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-4xl font-bold">
-              ${metrics.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
+              <h1 className="text-2xl sm:text-3xl font-bold break-words">{portfolio.name}</h1>
+              {simulationEnabled && (
+                <span className="px-2 py-1 text-xs font-medium bg-accent text-accent-foreground rounded-md whitespace-nowrap">
+                  SIMULATION MODE
+                </span>
+              )}
             </div>
-            <div className={`text-lg ${metrics.dailyChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-              {metrics.dailyChange >= 0 ? '+' : ''}${metrics.dailyChange.toFixed(2)} ({metrics.dailyChangePercent.toFixed(2)}%)
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <div className="text-3xl sm:text-4xl font-bold break-words">
+                ${metrics.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <div className={`text-base sm:text-lg ${metrics.dailyChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {formatSignedUSD(metrics.dailyChange)} ({metrics.dailyChangePercent.toFixed(2)}%)
+              </div>
             </div>
+            {!simulationEnabled && <LastUpdatedIndicator timestamp={dataUpdatedAt} />}
           </div>
-          {!simulationEnabled && <LastUpdatedIndicator timestamp={dataUpdatedAt} />}
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant={simulationEnabled ? 'default' : 'outline'}
-            onClick={toggleSimulation}
-          >
-            <FlaskConical className="mr-2 h-4 w-4" />
-            {simulationEnabled ? 'Exit Simulation' : 'Simulate'}
-          </Button>
-          <Button onClick={() => setShowAddModal(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Holding
-          </Button>
-          <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete Portfolio
-          </Button>
+          
+          {/* Action buttons - stacked on mobile */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:shrink-0">
+            <Button
+              variant={simulationEnabled ? 'default' : 'outline'}
+              onClick={toggleSimulation}
+              className="w-full sm:w-auto"
+            >
+              <FlaskConical className="mr-2 h-4 w-4" />
+              {simulationEnabled ? 'Exit Simulation' : 'Simulate'}
+            </Button>
+            <Button onClick={handleAddNew} className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Holding
+            </Button>
+            <Button variant="destructive" onClick={() => setShowDeleteDialog(true)} className="w-full sm:w-auto">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Portfolio
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -141,8 +160,8 @@ export default function PortfolioDetailPage({ portfolioName }: PortfolioDetailPa
       {simulationEnabled && (
         <Card className="border-accent">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Simulation Controls</CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <CardTitle className="text-base sm:text-lg">Simulation Controls</CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
@@ -155,7 +174,7 @@ export default function PortfolioDetailPage({ portfolioName }: PortfolioDetailPa
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-end gap-4">
+              <div className="flex flex-col gap-3">
                 <div className="flex-1">
                   <Label htmlFor="global-move">Global Market Move (%)</Label>
                   <Input
@@ -180,9 +199,9 @@ export default function PortfolioDetailPage({ portfolioName }: PortfolioDetailPa
       {/* Holdings Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Holdings</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Holdings</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6">
           <HoldingsTable
             portfolio={portfolio}
             quotes={effectiveQuotes}
@@ -196,10 +215,10 @@ export default function PortfolioDetailPage({ portfolioName }: PortfolioDetailPa
       </Card>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Allocation</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Allocation</CardTitle>
           </CardHeader>
           <CardContent>
             <AllocationDonutChart portfolio={portfolio} quotes={effectiveQuotes} />
@@ -208,7 +227,7 @@ export default function PortfolioDetailPage({ portfolioName }: PortfolioDetailPa
 
         <Card>
           <CardHeader>
-            <CardTitle>Performance</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Performance</CardTitle>
           </CardHeader>
           <CardContent>
             <PerformanceLineChart
@@ -223,30 +242,37 @@ export default function PortfolioDetailPage({ portfolioName }: PortfolioDetailPa
       </div>
 
       {/* Settings */}
-      <Tabs defaultValue="sharing">
-        <TabsList>
-          <TabsTrigger value="sharing">Sharing</TabsTrigger>
+      <Tabs defaultValue="sharing" className="w-full">
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="sharing" className="flex-1 sm:flex-none">Sharing</TabsTrigger>
         </TabsList>
         <TabsContent value="sharing">
-          <PortfolioSharingPanel
-            portfolioName={portfolio.name}
-            isPublic={portfolio.isPublic}
-          />
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base sm:text-lg">Portfolio Sharing</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PortfolioSharingPanel portfolioName={portfolio.name} isPublic={portfolio.isPublic} />
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
       {/* Modals */}
       <AddEditHoldingModal
         open={showAddModal}
-        onOpenChange={setShowAddModal}
+        onOpenChange={handleCloseAddModal}
         portfolioName={portfolio.name}
+        existingHolding={editingHolding}
       />
+
       <RemoveHoldingConfirm
         open={showRemoveConfirm}
         onOpenChange={setShowRemoveConfirm}
         portfolioName={portfolio.name}
         ticker={selectedTicker}
       />
+
       <DeletePortfolioDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}

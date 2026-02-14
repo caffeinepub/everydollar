@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import type { Portfolio } from '../../backend';
 import type { QuoteData } from '../../hooks/useMarketData';
 import { calculateHoldingMetrics } from '../../lib/portfolioMath';
+import { formatSignedUSD } from '../../utils/formatters';
+import { matchesQuery } from '../../utils/textSearch';
 import {
   Table,
   TableBody,
@@ -11,7 +14,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Pencil, Trash2, X } from 'lucide-react';
+import { Pencil, Trash2, X, Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface HoldingsTableProps {
@@ -37,6 +40,8 @@ export default function HoldingsTable({
   priceOverrides = new Map(),
   onSetOverridePrice,
 }: HoldingsTableProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -49,7 +54,7 @@ export default function HoldingsTable({
 
   if (portfolio.holdings.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
+      <div className="text-center py-12 text-muted-foreground px-4">
         No holdings yet. Add your first investment to get started!
       </div>
     );
@@ -64,6 +69,11 @@ export default function HoldingsTable({
 
   const holdingsWithMetrics = portfolio.holdings.map(h =>
     calculateHoldingMetrics(h, quoteMap.get(h.ticker), totalValue)
+  );
+
+  // Filter holdings based on search query (case-insensitive)
+  const filteredHoldings = holdingsWithMetrics.filter(holding =>
+    matchesQuery(holding.ticker, searchQuery)
   );
 
   const handleOverridePriceChange = (ticker: string, value: string) => {
@@ -84,99 +94,128 @@ export default function HoldingsTable({
   };
 
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Ticker</TableHead>
-            <TableHead className="text-right">Shares</TableHead>
-            <TableHead className="text-right">Avg Cost</TableHead>
-            <TableHead className="text-right">Current Price</TableHead>
-            <TableHead className="text-right">Market Value</TableHead>
-            <TableHead className="text-right">Day Change</TableHead>
-            <TableHead className="text-right">Total Return</TableHead>
-            <TableHead className="text-right">% of Portfolio</TableHead>
-            {!readOnly && <TableHead className="text-right">Actions</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {holdingsWithMetrics.map((holding) => {
-            const hasOverride = priceOverrides.has(holding.ticker);
-            
-            return (
-              <TableRow key={holding.ticker}>
-                <TableCell className="font-medium">{holding.ticker}</TableCell>
-                <TableCell className="text-right">{holding.shares.toFixed(4)}</TableCell>
-                <TableCell className="text-right">${holding.avgCost.toFixed(2)}</TableCell>
-                <TableCell className="text-right">
-                  {simulationEnabled ? (
-                    <div className="flex items-center justify-end gap-1">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        value={hasOverride ? priceOverrides.get(holding.ticker) : ''}
-                        onChange={(e) => handleOverridePriceChange(holding.ticker, e.target.value)}
-                        placeholder={`$${holding.currentPrice.price.toFixed(2)}`}
-                        className="w-24 h-8 text-right"
-                      />
-                      {hasOverride && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => clearOverride(holding.ticker)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    `$${holding.currentPrice.price.toFixed(2)}`
-                  )}
-                </TableCell>
-                <TableCell className="text-right font-medium">
-                  ${holding.marketValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </TableCell>
-                <TableCell className={`text-right ${holding.dayChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                  {holding.dayChange >= 0 ? '+' : ''}${holding.dayChange.toFixed(2)}
-                  <br />
-                  <span className="text-xs">
-                    ({holding.dayChangePercent >= 0 ? '+' : ''}{holding.dayChangePercent.toFixed(2)}%)
-                  </span>
-                </TableCell>
-                <TableCell className={`text-right ${holding.totalReturn >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                  {holding.totalReturn >= 0 ? '+' : ''}${holding.totalReturn.toFixed(2)}
-                  <br />
-                  <span className="text-xs">
-                    ({holding.totalReturnPercent >= 0 ? '+' : ''}{holding.totalReturnPercent.toFixed(2)}%)
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">{holding.allocationPercent.toFixed(2)}%</TableCell>
-                {!readOnly && (
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onEdit?.(holding.ticker)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onRemove?.(holding.ticker)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                )}
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+    <div className="space-y-4">
+      {/* Search Input */}
+      <div className="px-3 sm:px-0">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search holdings by ticker..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
+      {/* Holdings Table */}
+      {filteredHoldings.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground px-4">
+          No holdings match "{searchQuery}"
+        </div>
+      ) : (
+        <div className="overflow-x-auto -mx-3 sm:mx-0">
+          <div className="inline-block min-w-full align-middle">
+            <div className="overflow-hidden border-y sm:border sm:rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">Ticker</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Shares</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Avg Cost</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Current Price</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Market Value</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Day Change</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">Total Return</TableHead>
+                    <TableHead className="text-right whitespace-nowrap">% of Portfolio</TableHead>
+                    {!readOnly && <TableHead className="text-right whitespace-nowrap">Actions</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredHoldings.map((holding) => {
+                    const hasOverride = priceOverrides.has(holding.ticker);
+                    
+                    return (
+                      <TableRow key={holding.ticker}>
+                        <TableCell className="font-medium whitespace-nowrap">{holding.ticker}</TableCell>
+                        <TableCell className="text-right whitespace-nowrap">{holding.shares.toFixed(4)}</TableCell>
+                        <TableCell className="text-right whitespace-nowrap">${holding.avgCost.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">
+                          {simulationEnabled ? (
+                            <div className="flex items-center justify-end gap-1 min-w-[140px]">
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={hasOverride ? priceOverrides.get(holding.ticker) : ''}
+                                onChange={(e) => handleOverridePriceChange(holding.ticker, e.target.value)}
+                                placeholder={`$${holding.currentPrice.price.toFixed(2)}`}
+                                className="w-20 sm:w-24 h-8 text-right text-sm"
+                              />
+                              {hasOverride && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 shrink-0"
+                                  onClick={() => clearOverride(holding.ticker)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="whitespace-nowrap">${holding.currentPrice.price.toFixed(2)}</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-medium whitespace-nowrap">
+                          ${holding.marketValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </TableCell>
+                        <TableCell className={`text-right whitespace-nowrap ${holding.dayChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {formatSignedUSD(holding.dayChange)}
+                          <br />
+                          <span className="text-xs">
+                            ({holding.dayChangePercent >= 0 ? '+' : ''}{holding.dayChangePercent.toFixed(2)}%)
+                          </span>
+                        </TableCell>
+                        <TableCell className={`text-right whitespace-nowrap ${holding.totalReturn >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {formatSignedUSD(holding.totalReturn)}
+                          <br />
+                          <span className="text-xs">
+                            ({holding.totalReturnPercent >= 0 ? '+' : ''}{holding.totalReturnPercent.toFixed(2)}%)
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right whitespace-nowrap">{holding.allocationPercent.toFixed(2)}%</TableCell>
+                        {!readOnly && (
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => onEdit?.(holding.ticker)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => onRemove?.(holding.ticker)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

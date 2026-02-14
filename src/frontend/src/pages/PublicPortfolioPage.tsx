@@ -3,6 +3,7 @@ import { useGetPublicPortfolio } from '../hooks/useQueries';
 import { useLiveQuotes, AssetMetadata } from '../hooks/useMarketData';
 import { usePortfolioSimulation } from '../hooks/usePortfolioSimulation';
 import { computeSimulatedQuotes } from '../lib/simulationQuotes';
+import { formatSignedUSD } from '../utils/formatters';
 import HoldingsTable from '../components/portfolio/HoldingsTable';
 import AllocationDonutChart from '../components/charts/AllocationDonutChart';
 import PerformanceLineChart from '../components/charts/PerformanceLineChart';
@@ -55,20 +56,20 @@ export default function PublicPortfolioPage({ owner, portfolioName }: PublicPort
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6 max-w-7xl space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-96 w-full" />
+      <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl space-y-4 sm:space-y-6">
+        <Skeleton className="h-8 sm:h-10 w-48 sm:w-64" />
+        <Skeleton className="h-64 sm:h-96 w-full" />
       </div>
     );
   }
 
   if (isError || !portfolio) {
     return (
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="text-center py-16">
-          <Lock className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h1 className="text-2xl font-bold mb-4">Portfolio Not Available</h1>
-          <p className="text-muted-foreground">
+      <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl">
+        <div className="text-center py-12 sm:py-16 px-4">
+          <Lock className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 text-muted-foreground" />
+          <h1 className="text-xl sm:text-2xl font-bold mb-4">Portfolio Not Available</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             {error?.message || 'This portfolio is private or does not exist.'}
           </p>
         </div>
@@ -80,37 +81,36 @@ export default function PublicPortfolioPage({ owner, portfolioName }: PublicPort
   const primaryHolding = portfolio.holdings[0];
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl space-y-6">
+    <div className="container mx-auto p-3 sm:p-4 md:p-6 max-w-7xl space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="border-b border-border pb-6">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Public Portfolio</span>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 flex-wrap">
+              <h1 className="text-2xl sm:text-3xl font-bold break-words">{portfolio.name}</h1>
+              {simulationEnabled && (
+                <span className="px-2 py-1 text-xs font-medium bg-accent text-accent-foreground rounded-md whitespace-nowrap">
+                  SIMULATION MODE
+                </span>
+              )}
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <div className="text-3xl sm:text-4xl font-bold break-words">
+                ${metrics.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <div className={`text-base sm:text-lg ${metrics.dailyChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {formatSignedUSD(metrics.dailyChange)} ({metrics.dailyChangePercent.toFixed(2)}%)
+              </div>
+            </div>
           </div>
           <Button
             variant={simulationEnabled ? 'default' : 'outline'}
-            size="sm"
             onClick={toggleSimulation}
+            className="w-full sm:w-auto"
           >
             <FlaskConical className="mr-2 h-4 w-4" />
             {simulationEnabled ? 'Exit Simulation' : 'Simulate'}
           </Button>
-        </div>
-        <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-3xl font-bold">{portfolio.name}</h1>
-          {simulationEnabled && (
-            <span className="px-2 py-1 text-xs font-medium bg-accent text-accent-foreground rounded-md">
-              SIMULATION MODE
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-4xl font-bold">
-            ${metrics.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </div>
-          <div className={`text-lg ${metrics.dailyChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            {metrics.dailyChange >= 0 ? '+' : ''}${metrics.dailyChange.toFixed(2)} ({metrics.dailyChangePercent.toFixed(2)}%)
-          </div>
         </div>
       </div>
 
@@ -118,8 +118,8 @@ export default function PublicPortfolioPage({ owner, portfolioName }: PublicPort
       {simulationEnabled && (
         <Card className="border-accent">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Simulation Controls</CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <CardTitle className="text-base sm:text-lg">Simulation Controls</CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
@@ -132,7 +132,7 @@ export default function PublicPortfolioPage({ owner, portfolioName }: PublicPort
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-end gap-4">
+              <div className="flex flex-col gap-3">
                 <div className="flex-1">
                   <Label htmlFor="global-move">Global Market Move (%)</Label>
                   <Input
@@ -157,9 +157,9 @@ export default function PublicPortfolioPage({ owner, portfolioName }: PublicPort
       {/* Holdings Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Holdings</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Holdings</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0 sm:p-6">
           <HoldingsTable
             portfolio={portfolio}
             quotes={effectiveQuotes}
@@ -172,10 +172,10 @@ export default function PublicPortfolioPage({ owner, portfolioName }: PublicPort
       </Card>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Allocation</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Allocation</CardTitle>
           </CardHeader>
           <CardContent>
             <AllocationDonutChart portfolio={portfolio} quotes={effectiveQuotes} />
@@ -184,7 +184,7 @@ export default function PublicPortfolioPage({ owner, portfolioName }: PublicPort
 
         <Card>
           <CardHeader>
-            <CardTitle>Performance</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Performance</CardTitle>
           </CardHeader>
           <CardContent>
             <PerformanceLineChart

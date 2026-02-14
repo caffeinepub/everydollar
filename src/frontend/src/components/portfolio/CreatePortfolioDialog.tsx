@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCreatePortfolio } from '../../hooks/useQueries';
+import { useActor } from '../../hooks/useActor';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,9 @@ interface CreatePortfolioDialogProps {
 export default function CreatePortfolioDialog({ open, onOpenChange }: CreatePortfolioDialogProps) {
   const [name, setName] = useState('');
   const createMutation = useCreatePortfolio();
+  const { actor, isFetching: actorFetching } = useActor();
+
+  const isActorReady = !!actor && !actorFetching;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,12 +72,18 @@ export default function CreatePortfolioDialog({ open, onOpenChange }: CreatePort
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={createMutation.isPending}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? 'Creating...' : 'Create Portfolio'}
+            <Button 
+              type="submit" 
+              disabled={createMutation.isPending || !isActorReady}
+            >
+              {!isActorReady 
+                ? 'Connecting...' 
+                : createMutation.isPending 
+                ? 'Creating...' 
+                : 'Create Portfolio'}
             </Button>
           </DialogFooter>
         </form>

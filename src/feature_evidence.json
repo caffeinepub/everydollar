@@ -2,11 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-enforce-light-mode-no-dark-mode-and-no-system-theme-following-on-all-pages-that-are-accessible-without-authentication-including-the-public-portfolio-route-and-the-unauthenticated-login-initialization-screens",
-      "featureTitle": "Enforce Light Mode (no Dark Mode and no system theme following) on all pages that are accessible without authentication, including the public portfolio route and the unauthenticated/login + initialization screens.",
+      "featureId": "feature-update-the-holdings-search-filter-logic-so-that-matching-holdings-is-case-insensitive-e-g-a-query-of-icp-must-match-a-holding-with-ticker-icp-apply-this-to-any-ui-that-filters-holdings-by-a-text-query-at-minimum-the-portfolio-holdings-list-table-filtering-behavior",
+      "featureTitle": "Update the holdings search/filter logic so that matching holdings is case-insensitive (e.g., a query of \"icp\" must match a holding with ticker \"ICP\"). Apply this to any UI that filters holdings by a text query (at minimum, the portfolio holdings list/table filtering behavior).",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/theme/PublicThemeProvider.tsx"
+        "frontend/src/components/portfolio/HoldingsTable.tsx",
+        "frontend/src/utils/textSearch.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -19,27 +19,6 @@
       ],
       "testIds": [
         "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-the-theme-provider-configuration-for-public-unauthenticated-routes-so-that-the-document-root-class-is-consistently-set-to-light-and-cannot-be-overridden-by-system-theme-or-persisted-theme-preference",
-      "featureTitle": "Update the theme provider configuration for public/unauthenticated routes so that the document root class is consistently set to `light` and cannot be overridden by system theme or persisted theme preference.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/theme/PublicThemeProvider.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-2"
       ],
       "confidence": "high"
     }
