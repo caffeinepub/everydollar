@@ -1,38 +1,104 @@
 {
   "kind": "build_request",
-  "title": "Make holdings search case-insensitive",
+  "title": "Add CoinPaprika fallback for crypto market data when CoinGecko is unavailable",
+  "projectName": "Portfolio Tracker",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Update the holdings search/filter logic so that matching holdings is case-insensitive (e.g., a query of \"icp\" must match a holding with ticker \"ICP\"). Apply this to any UI that filters holdings by a text query (at minimum, the portfolio holdings list/table filtering behavior).",
-      "target": "frontend",
+      "id": "REQ-4",
+      "text": "Implement an automatic fallback to CoinPaprika for all crypto market-data HTTP outcalls when CoinGecko requests fail (network error, non-2xx response, invalid JSON, or missing expected fields), while keeping CoinGecko as the primary source.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "recent-messages-4"
+          "msg-3"
         ],
         "quotes": [
-          "searching for holdings should be case insensitive. If i type in \"icp,\" it should return the \"ICP\" holding, etc."
+          "If we don't get any data from CoinGecko, we should use an alternate source as a fallback"
         ]
       },
       "acceptanceCriteria": [
-        "When a portfolio contains a holding with ticker \"ICP\", searching for \"icp\" returns/matches that holding.",
-        "Searching for \"ICP\" and \"icp\" yields identical results.",
-        "Partial matches are also case-insensitive (e.g., query \"ic\" matches \"ICP\" if partial matching is supported by the existing holdings search behavior).",
-        "No changes are required to how tickers are displayed (tickers should continue to render in their stored/original casing)."
+        "When CoinGecko is reachable and returns valid data, the backend uses CoinGecko responses (CoinPaprika is not called).",
+        "When CoinGecko fails for a crypto request (live price, historical chart, or search), the backend retries using CoinPaprika and returns usable data to the frontend.",
+        "Fallback logic is implemented for all existing crypto endpoints used by the frontend: searchCryptoTickers, getCryptoLivePrice, and getCryptoHistoricalData."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Use CoinPaprika as the fallback provider and support automatic switching back to CoinGecko on subsequent requests once CoinGecko becomes available again (no sticky fallback mode).",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-5"
+        ],
+        "quotes": [
+          "1. Suggest a reliable, free one 2. yes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "CoinPaprika is the only fallback provider added.",
+        "Each crypto request attempts CoinGecko first; if CoinGecko succeeds after a prior failure, the backend serves CoinGecko data again without requiring a restart or manual action."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Keep fallback usage silent in the UI: do not display alerts, banners, toasts, or other user-facing indicators when CoinPaprika data is being used.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-5"
+        ],
+        "quotes": [
+          "3. no"
+        ]
+      },
+      "acceptanceCriteria": [
+        "No new UI elements are added to indicate fallback usage.",
+        "Existing UI behavior remains unchanged except that crypto quotes/search/history continue working during CoinGecko outages."
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Update the frontend crypto parsing/market-data layer to correctly handle the backend’s fallback responses for crypto search, live price, and historical data, while preserving the existing cached-live-quote behavior (keep last successful per-symbol quote on partial failures).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3",
+          "msg-5"
+        ],
+        "quotes": [
+          "If we don't get any data from CoinGecko, we should use an alternate source as a fallback",
+          "1. Suggest a reliable, free one 2. yes, 3. no"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Crypto search results continue to populate when CoinGecko search is unavailable but CoinPaprika is available.",
+        "Crypto live quotes and historical charts render with non-zero values when CoinGecko endpoints are unavailable but CoinPaprika is available.",
+        "The existing per-symbol live quote cache behavior remains intact: if a refresh partially fails, previously cached successful quotes are still returned for those symbols until a new successful fetch updates them."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files under frontend/src/components/ui (compose existing UI components instead).",
-    "Do not modify any files listed as immutable in SYSTEM_CONTEXT (e.g., frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx)."
+    "Backend must remain a single Motoko actor in backend/main.mo; do not introduce additional backend services.",
+    "Do not edit files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT.",
+    "Do not add user-facing alerts/notifications for fallback usage."
   ],
   "nonGoals": [
-    "Adding new backend endpoints or changing backend storage for holdings tickers.",
-    "Changing the market ticker search (typeahead) behavior unless it is directly used for holdings filtering."
+    "Adding third-party authentication beyond Internet Identity.",
+    "Adding a new database or any external data store.",
+    "Adding real-time updates via WebSockets or push notifications."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

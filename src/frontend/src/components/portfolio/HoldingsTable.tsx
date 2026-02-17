@@ -61,10 +61,12 @@ export default function HoldingsTable({
   }
 
   const quoteMap = new Map(quotes.map(q => [q.symbol, q]));
+  
+  // Calculate total value only from holdings with live quotes
   const totalValue = portfolio.holdings.reduce((sum, h) => {
     const quote = quoteMap.get(h.ticker);
-    const price = quote?.price || h.currentPrice.price;
-    return sum + (h.shares * price);
+    if (!quote) return sum;
+    return sum + (h.shares * quote.price);
   }, 0);
 
   const holdingsWithMetrics = portfolio.holdings.map(h =>
@@ -149,7 +151,7 @@ export default function HoldingsTable({
                                 step="0.01"
                                 value={hasOverride ? priceOverrides.get(holding.ticker) : ''}
                                 onChange={(e) => handleOverridePriceChange(holding.ticker, e.target.value)}
-                                placeholder={`$${holding.currentPrice.price.toFixed(2)}`}
+                                placeholder={holding.hasMissingPrice ? '—' : `$${holding.currentPrice.price.toFixed(2)}`}
                                 className="w-20 sm:w-24 h-8 text-right text-sm"
                               />
                               {hasOverride && (
@@ -164,43 +166,55 @@ export default function HoldingsTable({
                               )}
                             </div>
                           ) : (
-                            <span className="whitespace-nowrap">${holding.currentPrice.price.toFixed(2)}</span>
+                            <span className="whitespace-nowrap">
+                              {holding.hasMissingPrice ? '—' : `$${holding.currentPrice.price.toFixed(2)}`}
+                            </span>
                           )}
                         </TableCell>
                         <TableCell className="text-right font-medium whitespace-nowrap">
-                          ${holding.marketValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {holding.hasMissingPrice ? '—' : `$${holding.marketValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                         </TableCell>
-                        <TableCell className={`text-right whitespace-nowrap ${holding.dayChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {formatSignedUSD(holding.dayChange)}
-                          <br />
-                          <span className="text-xs">
-                            ({holding.dayChangePercent >= 0 ? '+' : ''}{holding.dayChangePercent.toFixed(2)}%)
-                          </span>
+                        <TableCell className={`text-right whitespace-nowrap ${holding.hasMissingPrice ? 'text-muted-foreground' : holding.dayChange >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {holding.hasMissingPrice ? '—' : (
+                            <>
+                              {formatSignedUSD(holding.dayChange)}
+                              <br />
+                              <span className="text-xs">
+                                ({holding.dayChangePercent >= 0 ? '+' : ''}{holding.dayChangePercent.toFixed(2)}%)
+                              </span>
+                            </>
+                          )}
                         </TableCell>
-                        <TableCell className={`text-right whitespace-nowrap ${holding.totalReturn >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {formatSignedUSD(holding.totalReturn)}
-                          <br />
-                          <span className="text-xs">
-                            ({holding.totalReturnPercent >= 0 ? '+' : ''}{holding.totalReturnPercent.toFixed(2)}%)
-                          </span>
+                        <TableCell className={`text-right whitespace-nowrap ${holding.hasMissingPrice ? 'text-muted-foreground' : holding.totalReturn >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {holding.hasMissingPrice ? '—' : (
+                            <>
+                              {formatSignedUSD(holding.totalReturn)}
+                              <br />
+                              <span className="text-xs">
+                                ({holding.totalReturnPercent >= 0 ? '+' : ''}{holding.totalReturnPercent.toFixed(2)}%)
+                              </span>
+                            </>
+                          )}
                         </TableCell>
-                        <TableCell className="text-right whitespace-nowrap">{holding.allocationPercent.toFixed(2)}%</TableCell>
+                        <TableCell className="text-right whitespace-nowrap">
+                          {holding.hasMissingPrice ? '—' : `${holding.allocationPercent.toFixed(1)}%`}
+                        </TableCell>
                         {!readOnly && (
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
+                          <TableCell className="text-right whitespace-nowrap">
+                            <div className="flex justify-end gap-1 sm:gap-2">
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
                                 onClick={() => onEdit?.(holding.ticker)}
+                                className="h-8 w-8"
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
                                 onClick={() => onRemove?.(holding.ticker)}
+                                className="h-8 w-8 text-destructive hover:text-destructive"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>

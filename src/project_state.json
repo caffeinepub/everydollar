@@ -2,17 +2,25 @@
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
   "summary": "New project",
-  "architectural_notes": [],
-  "known_issues": [
-    "Holdings search is currently case-sensitive; lowercase queries (e.g., \"icp\") do not match uppercase holdings (e.g., \"ICP\")."
+  "architectural_notes": [
+    "Crypto live-quote provider: primary CoinGecko with CoinPaprika as automatic fallback; system should automatically revert to CoinGecko when it recovers; no UI alerts when fallback is in use."
   ],
-  "isFixRequest": true,
+  "known_issues": [],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-update-the-holdings-search-filter-logic-so-that-matching-holdings-is-case-insensitive-e-g-a-query-of-icp-must-match-a-holding-with-ticker-icp-apply-this-to-any-ui-that-filters-holdings-by-a-text-query-at-minimum-the-portfolio-holdings-list-table-filtering-behavior",
-      "title": "Update the holdings search/filter logic so that matching holdings is case-insensitive (e.g., a query of \"icp\" must match a holding with ticker \"ICP\"). Apply this to any UI that filters holdings by a text query (at minimum, the portfolio holdings list/table filtering behavior).",
+      "id": "feature-keep-fallback-usage-silent-in-the-ui-do-not-display-alerts-banners-toasts-or-other-user-facing-indicators-when-coinpaprika-data-is-being-used",
+      "title": "Keep fallback usage silent in the UI: do not display alerts, banners, toasts, or other user-facing indicators when CoinPaprika data is being used.",
       "reqIds": [
-        "REQ-1"
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-frontend-crypto-parsing-market-data-layer-to-correctly-handle-the-backend-s-fallback-responses-for-crypto-search-live-price-and-historical-data-while-preserving-the-existing-cached-live-quote-behavior-keep-last-successful-per-symbol-quote-on-partial-failures",
+      "title": "Update the frontend crypto parsing/market-data layer to correctly handle the backend’s fallback responses for crypto search, live price, and historical data, while preserving the existing cached-live-quote behavior (keep last successful per-symbol quote on partial failures).",
+      "reqIds": [
+        "REQ-7"
       ],
       "version": 1
     }
@@ -20,12 +28,28 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Make holdings search case-insensitive (e.g., \"icp\" matches \"ICP\")",
+      "summary": "Add fallback crypto price data source (CoinPaprika) when CoinGecko fails; auto-switch back to CoinGecko when available; no UI alerts for fallback usage",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Implement an automatic fallback to CoinPaprika for all crypto market-data HTTP outcalls when CoinGecko requests fail (network error, non-2xx response, invalid JSON, or missing expected fields), while keeping CoinGecko as the primary source.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Use CoinPaprika as the fallback provider and support automatic switching back to CoinGecko on subsequent requests once CoinGecko becomes available again (no sticky fallback mode).",
+      "reqIds": [
+        "REQ-5"
+      ],
       "status": "pending"
     }
   ],
-  "projectName": "Make holdings search case-insensitive",
+  "projectName": "Portfolio Tracker",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

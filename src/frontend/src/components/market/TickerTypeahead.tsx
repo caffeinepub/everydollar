@@ -31,22 +31,24 @@ export default function TickerTypeahead({
   const inputRef = useRef<HTMLInputElement>(null);
 
   const debouncedQuery = useDebouncedValue(value, debounceMs);
-  const { data: results = [], isLoading } = useTickerSearch(debouncedQuery, minQueryLength);
+  const { data: results = [], isLoading, isFetching } = useTickerSearch(debouncedQuery, minQueryLength);
 
-  const showDropdown = isOpen && value.length >= minQueryLength;
+  const shouldShowDropdown = value.length >= minQueryLength;
   const hasResults = results.length > 0;
+  const isSearching = isLoading || isFetching;
 
   useEffect(() => {
     setHighlightedIndex(0);
   }, [results]);
 
   useEffect(() => {
-    if (value.length >= minQueryLength && results.length > 0) {
+    // Open dropdown as soon as minimum query length is reached
+    if (value.length >= minQueryLength) {
       setIsOpen(true);
-    } else if (value.length < minQueryLength) {
+    } else {
       setIsOpen(false);
     }
-  }, [value, results, minQueryLength]);
+  }, [value, minQueryLength]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -60,7 +62,14 @@ export default function TickerTypeahead({
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showDropdown || !hasResults) return;
+    if (!isOpen || !hasResults) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setIsOpen(false);
+        inputRef.current?.blur();
+      }
+      return;
+    }
 
     switch (e.key) {
       case 'ArrowDown':
@@ -102,7 +111,7 @@ export default function TickerTypeahead({
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => {
-            if (value.length >= minQueryLength && results.length > 0) {
+            if (value.length >= minQueryLength) {
               setIsOpen(true);
             }
           }}
@@ -110,9 +119,9 @@ export default function TickerTypeahead({
         />
       </div>
 
-      {showDropdown && (
+      {isOpen && shouldShowDropdown && (
         <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-lg">
-          {isLoading ? (
+          {isSearching ? (
             <div className="p-2 space-y-2">
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />

@@ -1,10 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Make portfolio holdings search/filtering case-insensitive so queries match holdings regardless of letter casing.
+**Goal:** Keep crypto search, live pricing, and historical charts working during CoinGecko outages by adding an automatic CoinPaprika fallback.
 
 **Planned changes:**
-- Update the holdings list/table text-filter logic to compare the query and holding fields (e.g., ticker) in a case-insensitive way.
-- Ensure partial matching (if currently supported) remains case-insensitive while preserving the displayed/original ticker casing.
+- Implement backend fallback logic so each crypto market-data request tries CoinGecko first and automatically retries via CoinPaprika on failure (network error, non-2xx, invalid JSON, or missing expected fields).
+- Apply fallback behavior to all existing crypto endpoints used by the frontend: searchCryptoTickers, getCryptoLivePrice, and getCryptoHistoricalData.
+- Ensure fallback is per-request (no sticky mode) so the backend switches back to CoinGecko automatically on subsequent successful requests.
+- Update the frontend market-data/parsing layer to handle fallback responses while preserving the existing per-symbol cached-live-quote behavior on partial failures.
+- Keep fallback usage silent in the UI (no new alerts/banners/toasts).
 
-**User-visible outcome:** Users can search holdings with any casing (e.g., "icp" or "ICP") and get identical matching results without changing how tickers are displayed.
+**User-visible outcome:** Crypto search, quotes, and charts continue to function during CoinGecko disruptions without any new UI indicators.

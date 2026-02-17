@@ -10,6 +10,7 @@ import {
   parseCryptoHistorical,
   getCryptoId,
   mapRangeToCryptoDays,
+  findKnownCryptoMatches,
 } from '../lib/symbols';
 
 export interface QuoteData {
@@ -40,6 +41,9 @@ export interface AssetMetadata {
 
 // In-memory cache for crypto symbol -> cryptoId resolution
 const cryptoIdCache = new Map<string, string>();
+
+// Per-symbol live quote cache (persists across refetches)
+const liveQuoteCache = new Map<string, QuoteData>();
 
 function resolveCryptoId(symbol: string): string | null {
   const normalized = symbol.toUpperCase();
@@ -78,14 +82,21 @@ export function useLiveQuotes(assets: (string | AssetMetadata)[], enabled = true
           
           // Determine if this is a crypto asset
           if (isCryptoAsset(assetType)) {
-            // Fetch from CoinGecko
+            // Fetch from CoinGecko (with CoinPaprika fallback)
             const resolvedCryptoId = cryptoId || resolveCryptoId(ticker);
             if (!resolvedCryptoId) {
               throw new Error(`Cannot resolve crypto ID for ${ticker}`);
             }
             
             const response = await actor.getCryptoLivePrice(resolvedCryptoId);
-            return parseCryptoLivePrice(response, ticker, resolvedCryptoId);
+            const parsed = parseCryptoLivePrice(response, ticker, resolvedCryptoId);
+            
+            // Validate parsed data
+            if (!parsed || parsed.price <= 0) {
+              throw new Error(`Invalid price data for ${ticker}`);
+            }
+            
+            return parsed;
           } else {
             // Fetch from Yahoo
             const normalized = normalizeSymbol(ticker);
@@ -95,17 +106,32 @@ export function useLiveQuotes(assets: (string | AssetMetadata)[], enabled = true
         })
       );
 
-      // Extract successful results
-      const newQuotes = results
-        .filter((r): r is PromiseFulfilledResult<QuoteData> => r.status === 'fulfilled')
-        .map(r => r.value);
+      // Update cache only for successfully fetched symbols with valid data
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled') {
+          const quote = result.value;
+          // Only cache if we have valid price data
+          if (quote && quote.price > 0) {
+            const normalizedSymbol = quote.symbol.toUpperCase();
+            liveQuoteCache.set(normalizedSymbol, quote);
+          }
+        }
+      });
 
-      return newQuotes;
+      // Build result array from cache for all requested assets
+      const quotesFromCache = assets
+        .map(asset => {
+          const metadata = typeof asset === 'string' ? { ticker: asset } : asset;
+          const normalizedSymbol = metadata.ticker.toUpperCase();
+          return liveQuoteCache.get(normalizedSymbol);
+        })
+        .filter((q): q is QuoteData => q !== undefined);
+
+      return quotesFromCache;
     },
     enabled: !!actor && !actorFetching && enabled && assets.length > 0,
     refetchInterval: 300000, // 5 minutes
     staleTime: 50000,
-    placeholderData: (previousData) => previousData, // Keep showing previous data during refetch
   });
 }
 
@@ -128,9 +154,35 @@ export function useTickerSearch(query: string, minLength: number = 2) {
           ? parseYahooSearch(yahooResponse.value) 
           : [];
         
-        const cryptoResults = cryptoResponse.status === 'fulfilled'
-          ? parseCryptoSearch(cryptoResponse.value)
-          : [];
+        let cryptoResults: SearchResult[] = [];
+        
+        // Parse crypto results (CoinGecko or CoinPaprika fallback)
+        if (cryptoResponse.status === 'fulfilled') {
+          try {
+            cryptoResults = parseCryptoSearch(cryptoResponse.value);
+          } catch (e) {
+            console.warn('Failed to parse crypto search results:', e);
+          }
+        }
+        
+        // Check if query matches any known crypto symbols (exact or prefix)
+        const knownMatches = findKnownCryptoMatches(query);
+        
+        // Inject known crypto matches that aren't already in cryptoResults
+        for (const match of knownMatches) {
+          const alreadyExists = cryptoResults.some(
+            r => r.symbol.toUpperCase() === match.symbol.toUpperCase()
+          );
+          
+          if (!alreadyExists) {
+            cryptoResults.unshift({
+              symbol: match.symbol,
+              name: match.symbol,
+              type: 'Crypto',
+              cryptoId: match.cryptoId,
+            });
+          }
+        }
         
         // Cache crypto IDs for later use
         cryptoResults.forEach(result => {
@@ -139,8 +191,39 @@ export function useTickerSearch(query: string, minLength: number = 2) {
           }
         });
         
-        // Merge results, crypto first
-        return [...cryptoResults, ...yahooResults];
+        // Dedupe: create a map by normalized symbol, preferring Crypto over Yahoo
+        const resultMap = new Map<string, SearchResult>();
+        
+        // Add Yahoo results first
+        yahooResults.forEach(result => {
+          const key = result.symbol.toUpperCase();
+          resultMap.set(key, result);
+        });
+        
+        // Add crypto results, overwriting any Yahoo duplicates
+        cryptoResults.forEach(result => {
+          const key = result.symbol.toUpperCase();
+          resultMap.set(key, result);
+        });
+        
+        // Convert back to array, crypto first
+        const dedupedResults: SearchResult[] = [];
+        
+        // Add crypto results first
+        cryptoResults.forEach(result => {
+          const key = result.symbol.toUpperCase();
+          if (resultMap.get(key) === result) {
+            dedupedResults.push(result);
+            resultMap.delete(key);
+          }
+        });
+        
+        // Add remaining Yahoo results
+        resultMap.forEach(result => {
+          dedupedResults.push(result);
+        });
+        
+        return dedupedResults;
       } catch (error) {
         console.error('Ticker search error:', error);
         return [];
@@ -169,7 +252,7 @@ export function useHistoricalData(
       
       // Determine if this is a crypto asset
       if (isCryptoAsset(assetType)) {
-        // Fetch from CoinGecko
+        // Fetch from CoinGecko (with CoinPaprika fallback)
         const resolvedCryptoId = cryptoId || resolveCryptoId(ticker);
         if (!resolvedCryptoId) {
           throw new Error(`Cannot resolve crypto ID for ${ticker}`);
@@ -177,7 +260,14 @@ export function useHistoricalData(
         
         const days = mapRangeToCryptoDays(range);
         const response = await actor.getCryptoHistoricalData(resolvedCryptoId, 'usd', days);
-        return parseCryptoHistorical(response);
+        const parsed = parseCryptoHistorical(response);
+        
+        // Validate parsed data
+        if (!parsed || parsed.length === 0) {
+          throw new Error(`No valid historical data for ${ticker}`);
+        }
+        
+        return parsed;
       } else {
         // Fetch from Yahoo
         const normalized = normalizeSymbol(ticker);

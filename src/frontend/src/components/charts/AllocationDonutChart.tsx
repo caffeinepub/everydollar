@@ -10,22 +10,26 @@ interface AllocationDonutChartProps {
 export default function AllocationDonutChart({ portfolio, quotes }: AllocationDonutChartProps) {
   const quoteMap = new Map(quotes.map(q => [q.symbol, q]));
 
-  const data = portfolio.holdings.map(h => {
-    const quote = quoteMap.get(h.ticker);
-    const price = quote?.price || h.currentPrice.price;
-    const value = h.shares * price;
+  // Only include holdings that have live quotes
+  const data = portfolio.holdings
+    .map(h => {
+      const quote = quoteMap.get(h.ticker);
+      if (!quote) return null;
+      
+      const value = h.shares * quote.price;
 
-    return {
-      name: h.ticker,
-      value,
-      color: h.color,
-    };
-  });
+      return {
+        name: h.ticker,
+        value,
+        color: h.color,
+      };
+    })
+    .filter((item): item is { name: string; value: number; color: string } => item !== null);
 
   if (data.length === 0) {
     return (
       <div className="h-80 flex items-center justify-center text-muted-foreground">
-        No holdings to display
+        No holdings with live prices to display
       </div>
     );
   }

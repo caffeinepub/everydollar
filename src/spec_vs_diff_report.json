@@ -1,32 +1,41 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-14T21:59:38.346Z",
-  "summary": "REQ-1 appears implemented for the portfolio holdings list/table: HoldingsTable now filters holdings using a case-insensitive helper (lowercased/trimmed includes match) without changing ticker display casing. No evidence of other holdings-filtering UIs being updated in the provided diff summary. There are additional unrequested changes (new generic search utility and project/meta files updates).",
-  "missing_requirements": [],
-  "hallucinated_features": [
+  "generatedAt": "2026-02-17T18:03:48.548Z",
+  "summary": "Frontend market-data parsing and caching logic was updated to validate crypto data and (per comments/summaries) handle both CoinGecko and CoinPaprika response shapes, but the diff summary does not provide evidence that the backend actually implements CoinPaprika HTTP-outcall fallback for the required crypto endpoints.",
+  "missing_requirements": [
     {
-      "description": "Added a generic text-search utility module (normalizeText/matchesQuery) rather than implementing case-insensitive matching inline where needed.",
-      "reason": "BuildRequest only asks to make holdings filtering case-insensitive; it does not request creating new shared utility modules.",
+      "id": "REQ-4",
+      "requirement": "Implement an automatic fallback to CoinPaprika for all crypto market-data HTTP outcalls when CoinGecko requests fail (network error, non-2xx response, invalid JSON, or missing expected fields), while keeping CoinGecko as the primary source, for searchCryptoTickers, getCryptoLivePrice, and getCryptoHistoricalData.",
+      "reason": "The provided backend diff excerpt shows only Yahoo-related HTTP outcalls and does not show any CoinGecko/CoinPaprika HTTP calls nor fallback/retry logic for the crypto endpoints; the relevant sections may be outside the truncated portion, but no evidence is present in the diff summary.",
       "evidence": [
-        "frontend/src/utils/textSearch.ts",
-        "frontend/src/components/portfolio/HoldingsTable.tsx"
+        "backend/main.mo (truncated excerpt shows fetchYahooData/fetchHistoricalData/searchTickers only; no CoinGecko/CoinPaprika fallback shown)"
       ]
     },
     {
-      "description": "Updated/added repository meta/documentation/state files (frontend file summaries and project_state).",
-      "reason": "BuildRequest does not request changes to project tracking or summary files; these are not required to implement case-insensitive holdings filtering.",
+      "id": "REQ-5",
+      "requirement": "Use CoinPaprika as the only fallback provider and support automatic switching back to CoinGecko on subsequent requests once CoinGecko becomes available again (no sticky fallback mode).",
+      "reason": "No backend implementation details are shown that attempt CoinGecko first and then fallback to CoinPaprika per-request; no evidence of non-sticky behavior is present in the diff summary.",
       "evidence": [
-        "frontend-file-summaries.txt",
-        "project_state.json"
+        "backend/main.mo (truncated; no provider-selection logic shown)"
       ]
     }
   ],
-  "confidence": 0.86,
+  "hallucinated_features": [
+    {
+      "description": "Random/mock price and historical values returned when Yahoo parsing fails (instead of failing/returning an error).",
+      "reason": "Not requested in the BuildRequest (which focuses on adding CoinPaprika fallback for crypto when CoinGecko is unavailable). Introducing random data changes behavior and could mask real parsing/outage issues.",
+      "evidence": [
+        "frontend/src/lib/symbols.ts (parseYahooQuote uses random fallback values; parseYahooHistorical generates synthetic series)"
+      ]
+    }
+  ],
+  "confidence": 0.62,
   "changed_files": [
+    "backend/main.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/portfolio/HoldingsTable.tsx",
-    "frontend/src/utils/textSearch.ts",
+    "frontend/src/hooks/useMarketData.ts",
+    "frontend/src/lib/symbols.ts",
     "project_state.json"
   ]
 }

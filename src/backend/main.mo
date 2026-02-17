@@ -1,7 +1,6 @@
 import Text "mo:core/Text";
 import Map "mo:core/Map";
 import Array "mo:core/Array";
-import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
 import OutCall "http-outcalls/outcall";
@@ -286,16 +285,18 @@ actor {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can search crypto tickers");
     };
-    let url = "https://api.coingecko.com/api/v3/search?query=" # searchTerm;
-    await OutCall.httpGetRequest(url, [], transform);
+    let coingeckoUrl = "https://api.coingecko.com/api/v3/search?query=" # searchTerm;
+    let coinpaprikaUrl = "https://api.coinpaprika.com/v1/coins/" # searchTerm;
+    await fetchWithFallback(coingeckoUrl, coinpaprikaUrl);
   };
 
   public shared ({ caller }) func getCryptoLivePrice(cryptoId : Text) : async Text {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can fetch crypto prices");
     };
-    let url = "https://api.coingecko.com/api/v3/simple/price?ids=" # cryptoId # "&vs_currencies=usd";
-    await OutCall.httpGetRequest(url, [], transform);
+    let coingeckoUrl = "https://api.coingecko.com/api/v3/simple/price?ids=" # cryptoId # "&vs_currencies=usd";
+    let coinpaprikaUrl = "https://api.coinpaprika.com/v1/tickers/" # cryptoId;
+    await fetchWithFallback(coingeckoUrl, coinpaprikaUrl);
   };
 
   public shared ({ caller }) func getCryptoHistoricalData(
@@ -306,8 +307,19 @@ actor {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can fetch crypto historical data");
     };
-    let url = "https://api.coingecko.com/api/v3/coins/" # cryptoId # "/market_chart?vs_currency=" # vsCurrency
+    let coingeckoUrl = "https://api.coingecko.com/api/v3/coins/" # cryptoId # "/market_chart?vs_currency=" # vsCurrency
       # "&days=" # days;
-    await OutCall.httpGetRequest(url, [], transform);
+    let coinpaprikaUrl = "https://api.coinpaprika.com/v1/tickers/" # cryptoId;
+    await fetchWithFallback(coingeckoUrl, coinpaprikaUrl);
+  };
+
+  func fetchWithFallback(primaryUrl : Text, fallbackUrl : Text) : async Text {
+    var output : Text = "";
+    label l loop {
+      output := await OutCall.httpGetRequest(primaryUrl, [], transform);
+      break l;
+    };
+    if (output != "") { return output };
+    return await OutCall.httpGetRequest(fallbackUrl, [], transform);
   };
 };

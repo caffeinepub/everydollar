@@ -8,6 +8,7 @@ export interface HoldingWithMetrics extends Holding {
   totalReturn: number;
   totalReturnPercent: number;
   allocationPercent: number;
+  hasMissingPrice: boolean;
 }
 
 export function calculateHoldingMetrics(
@@ -15,25 +16,27 @@ export function calculateHoldingMetrics(
   quote: QuoteData | undefined,
   totalPortfolioValue: number
 ): HoldingWithMetrics {
-  const currentPrice = quote?.price || holding.currentPrice.price;
-  const marketValue = holding.shares * currentPrice;
+  // Never fall back to holding.currentPrice - only use live quotes
+  const hasMissingPrice = !quote;
+  const currentPrice = quote?.price || 0;
+  const marketValue = quote ? holding.shares * currentPrice : 0;
   const costBasis = holding.shares * holding.avgCost;
   
-  const dayChange = holding.shares * (quote?.change || holding.currentPrice.change);
-  const dayChangePercent = quote?.changePercent || holding.currentPrice.changePercent;
+  const dayChange = quote ? holding.shares * quote.change : 0;
+  const dayChangePercent = quote?.changePercent || 0;
   
   const totalReturn = marketValue - costBasis;
-  const totalReturnPercent = costBasis > 0 ? (totalReturn / costBasis) * 100 : 0;
+  const totalReturnPercent = costBasis > 0 && quote ? (totalReturn / costBasis) * 100 : 0;
   
-  const allocationPercent = totalPortfolioValue > 0 ? (marketValue / totalPortfolioValue) * 100 : 0;
+  const allocationPercent = totalPortfolioValue > 0 && quote ? (marketValue / totalPortfolioValue) * 100 : 0;
 
   return {
     ...holding,
     currentPrice: {
       ...holding.currentPrice,
       price: currentPrice,
-      change: quote?.change || holding.currentPrice.change,
-      changePercent: quote?.changePercent || holding.currentPrice.changePercent,
+      change: quote?.change || 0,
+      changePercent: quote?.changePercent || 0,
     },
     marketValue,
     dayChange,
@@ -41,6 +44,7 @@ export function calculateHoldingMetrics(
     totalReturn,
     totalReturnPercent,
     allocationPercent,
+    hasMissingPrice,
   };
 }
 
@@ -49,22 +53,29 @@ export function calculatePortfolioMetrics(portfolio: Portfolio, quotes: QuoteDat
   
   const holdings = portfolio.holdings.map(h => {
     const quote = quoteMap.get(h.ticker);
-    const currentPrice = quote?.price || h.currentPrice.price;
-    const marketValue = h.shares * currentPrice;
+    // Only use live quote, never fall back to holding.currentPrice
+    const currentPrice = quote?.price || 0;
+    const marketValue = quote ? h.shares * currentPrice : 0;
     return { 
       ...h, 
       marketValue, 
-      currentPriceValue: currentPrice 
+      currentPriceValue: currentPrice,
+      hasQuote: !!quote,
     };
   });
 
-  const totalValue = holdings.reduce((sum, h) => sum + h.marketValue, 0);
+  // Only sum holdings that have live quotes
+  const totalValue = holdings
+    .filter(h => h.hasQuote)
+    .reduce((sum, h) => sum + h.marketValue, 0);
+  
   const totalCostBasis = holdings.reduce((sum, h) => sum + (h.shares * h.avgCost), 0);
   
   const dailyChange = holdings.reduce((sum, h) => {
     const quote = quoteMap.get(h.ticker);
-    const change = quote?.change || h.currentPrice.change;
-    return sum + (h.shares * change);
+    // Only include change if we have a live quote
+    if (!quote) return sum;
+    return sum + (h.shares * quote.change);
   }, 0);
   
   const dailyChangePercent = totalValue > 0 ? (dailyChange / (totalValue - dailyChange)) * 100 : 0;

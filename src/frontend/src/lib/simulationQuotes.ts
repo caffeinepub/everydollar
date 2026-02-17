@@ -1,5 +1,5 @@
-import type { QuoteData } from '../hooks/useMarketData';
 import type { Holding } from '../backend';
+import type { QuoteData } from '../hooks/useMarketData';
 
 export interface SimulationParams {
   globalMovePercent: number;
@@ -7,47 +7,58 @@ export interface SimulationParams {
 }
 
 /**
- * Compute simulated quote data from live quotes + simulation parameters.
- * Precedence: per-holding override > global percentage move > live price
+ * Compute simulated quotes from live quotes and simulation parameters.
+ * Precedence: override > global move > live quote
+ * Never falls back to holding.currentPrice
  */
 export function computeSimulatedQuotes(
   holdings: Holding[],
   liveQuotes: QuoteData[],
-  simulation: SimulationParams
+  params: SimulationParams
 ): QuoteData[] {
+  const { globalMovePercent, priceOverrides } = params;
   const quoteMap = new Map(liveQuotes.map(q => [q.symbol, q]));
 
-  return holdings.map(holding => {
-    const liveQuote = quoteMap.get(holding.ticker);
-    const livePrice = liveQuote?.price || holding.currentPrice.price;
-    
-    // Determine simulated price based on precedence
-    let simulatedPrice: number;
-    if (simulation.priceOverrides.has(holding.ticker)) {
-      // Per-holding override takes precedence
-      simulatedPrice = simulation.priceOverrides.get(holding.ticker)!;
-    } else if (simulation.globalMovePercent !== 0) {
-      // Apply global percentage move
-      simulatedPrice = livePrice * (1 + simulation.globalMovePercent / 100);
-    } else {
-      // No simulation, use live price
-      simulatedPrice = livePrice;
-    }
+  return holdings
+    .map(holding => {
+      const liveQuote = quoteMap.get(holding.ticker);
+      
+      // If no live quote exists, skip this holding (don't create simulated quote)
+      if (!liveQuote) {
+        return null;
+      }
 
-    // Calculate simulated day change from simulated price vs implied previous close
-    // Previous close = current price - change
-    const livePreviousClose = livePrice - (liveQuote?.change || holding.currentPrice.change);
-    const simulatedChange = simulatedPrice - livePreviousClose;
-    const simulatedChangePercent = livePreviousClose > 0 
-      ? (simulatedChange / livePreviousClose) * 100 
-      : 0;
+      const override = priceOverrides.get(holding.ticker);
 
-    return {
-      symbol: holding.ticker,
-      price: simulatedPrice,
-      change: simulatedChange,
-      changePercent: simulatedChangePercent,
-      currency: liveQuote?.currency || holding.currentPrice.currency,
-    };
-  });
+      let simulatedPrice: number;
+      let simulatedChange: number;
+      let simulatedChangePercent: number;
+
+      if (override !== undefined) {
+        // Use override price
+        simulatedPrice = override;
+        simulatedChange = override - (liveQuote.price - liveQuote.change);
+        simulatedChangePercent = liveQuote.price > 0 
+          ? (simulatedChange / (liveQuote.price - liveQuote.change)) * 100 
+          : 0;
+      } else if (globalMovePercent !== 0) {
+        // Apply global move to live price
+        const moveMultiplier = 1 + globalMovePercent / 100;
+        simulatedPrice = liveQuote.price * moveMultiplier;
+        simulatedChange = liveQuote.change * moveMultiplier;
+        simulatedChangePercent = liveQuote.changePercent;
+      } else {
+        // No simulation, return live quote as-is
+        return liveQuote;
+      }
+
+      return {
+        symbol: holding.ticker,
+        price: simulatedPrice,
+        change: simulatedChange,
+        changePercent: simulatedChangePercent,
+        currency: liveQuote.currency,
+      };
+    })
+    .filter((q): q is QuoteData => q !== null);
 }

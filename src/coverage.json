@@ -1,37 +1,63 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-14T21:59:38.348Z",
+  "generatedAt": "2026-02-17T18:03:48.551Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 4,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-1",
-        "summary": "Update the holdings search/filter logic so that matching holdings is case-insensitive (e.g., a query of \"icp\" must match a holding with ticker \"ICP\"). Apply this to any UI that filters holdings by a text query (at minimum, the portfolio holdings list/table filtering behavior).",
+        "id": "REQ-4",
+        "summary": "Implement an automatic fallback to CoinPaprika for all crypto market-data HTTP outcalls when CoinGecko requests fail (network error, non-2xx response, invalid JSON, or missing expected fields), while keeping CoinGecko as the primary source.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Use CoinPaprika as the fallback provider and support automatic switching back to CoinGecko on subsequent requests once CoinGecko becomes available again (no sticky fallback mode).",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-6",
+        "summary": "Keep fallback usage silent in the UI: do not display alerts, banners, toasts, or other user-facing indicators when CoinPaprika data is being used.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/utils/textSearch.ts",
-          "frontend/src/components/portfolio/HoldingsTable.tsx"
+          "frontend/src/hooks/useMarketData.ts"
         ],
         "matchedFiles": [
-          "frontend/src/utils/textSearch.ts",
-          "frontend/src/components/portfolio/HoldingsTable.tsx"
+          "frontend/src/hooks/useMarketData.ts"
+        ]
+      },
+      {
+        "id": "REQ-7",
+        "summary": "Update the frontend crypto parsing/market-data layer to correctly handle the backend’s fallback responses for crypto search, live price, and historical data, while preserving the existing cached-live-quote behavior (keep last successful per-symbol quote on partial failures).",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/lib/symbols.ts",
+          "frontend/src/hooks/useMarketData.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/lib/symbols.ts",
+          "frontend/src/hooks/useMarketData.ts"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/portfolio/HoldingsTable.tsx",
-    "frontend/src/utils/textSearch.ts",
+    "frontend/src/hooks/useMarketData.ts",
+    "frontend/src/lib/symbols.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
