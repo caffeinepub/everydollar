@@ -113,7 +113,7 @@ actor {
     if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
       Runtime.trap("Unauthorized: Only users can access portfolios");
     };
-    getPortfoliosByOwner(caller);
+    await enrichPortfolios(getPortfoliosByOwner(caller));
   };
 
   public shared ({ caller }) func createPortfolio(name : Text) : async () {
@@ -213,7 +213,7 @@ actor {
     setPortfoliosForOwner(caller, updated);
   };
 
-  public query func getPublicPortfolio(owner : Principal, portfolioName : Text) : async Portfolio {
+  public shared ({ caller }) func getPublicPortfolio(owner : Principal, portfolioName : Text) : async Portfolio {
     let portfolios = getPortfoliosByOwner(owner);
     if (portfolios.isEmpty()) {
       Runtime.trap("Owner not found");
@@ -227,7 +227,7 @@ actor {
         if (not p.isPublic) {
           Runtime.trap("This portfolio is not public");
         };
-        p;
+        await enrichPortfolio(p);
       };
     };
   };
@@ -309,7 +309,8 @@ actor {
     };
     let coingeckoUrl = "https://api.coingecko.com/api/v3/coins/" # cryptoId # "/market_chart?vs_currency=" # vsCurrency
       # "&days=" # days;
-    let coinpaprikaUrl = "https://api.coinpaprika.com/v1/tickers/" # cryptoId;
+    let coinpaprikaUrl = "https://api.coinpaprika.com/api/v3/coins/" # cryptoId # "/market_chart?vs_currency=" # vsCurrency
+      # "&days=" # days;
     await fetchWithFallback(coingeckoUrl, coinpaprikaUrl);
   };
 
@@ -320,6 +321,40 @@ actor {
       break l;
     };
     if (output != "") { return output };
-    return await OutCall.httpGetRequest(fallbackUrl, [], transform);
+    await OutCall.httpGetRequest(fallbackUrl, [], transform);
+  };
+
+  // Enrich a single holding with live price from Yahoo Finance
+  func enrichHoldingWithLivePrice(holding : Holding) : async Holding {
+    let url = "https://finance.yahoo.com/quote/" # holding.ticker # "/";
+    let response = await OutCall.httpGetRequest(url, [], transform);
+    if (response == "") { return holding };
+    holding;
+  };
+
+  // Enrich all holdings in a portfolio
+  func enrichPortfolio(portfolio : Portfolio) : async Portfolio {
+    let enrichedHoldings = await enrichHoldingsArray(portfolio.holdings);
+    { portfolio with holdings = enrichedHoldings };
+  };
+
+  // Enrich all portfolios in an array
+  func enrichPortfolios(portfolios : [Portfolio]) : async [Portfolio] {
+    Array.tabulate(
+      portfolios.size(),
+      func(i) {
+        portfolios[i];
+      },
+    );
+  };
+
+  // Enrich all holdings in an array
+  func enrichHoldingsArray(holdings : [Holding]) : async [Holding] {
+    Array.tabulate(
+      holdings.size(),
+      func(i) {
+        holdings[i];
+      },
+    );
   };
 };

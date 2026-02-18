@@ -1,43 +1,6 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Frontend compatibility with backend crypto provider fallback (silent UI + resilient parsing)",
-  "requirements": [
-    {
-      "id": "REQ-6",
-      "summary": "Keep CoinPaprika fallback usage silent in the UI (no new user-facing indicators).",
-      "acceptanceCriteria": [
-        "No new UI elements are added to indicate fallback usage.",
-        "Existing UI behavior remains unchanged except that crypto quotes/search/history continue working during CoinGecko outages."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useMarketData.ts",
-          "operation": "modify",
-          "description": "Ensure crypto market-data hooks do not surface provider/fallback state via UI-triggering mechanisms (no new toasts/banners), and keep failures handled by returning existing behavior (e.g., empty search results and cached quotes) without introducing new user-visible notifications."
-        }
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "summary": "Update frontend crypto parsing and market-data hooks to accept backend fallback response shapes for search/live price/history while preserving per-symbol live quote caching on partial failures.",
-      "acceptanceCriteria": [
-        "Crypto search results continue to populate when CoinGecko search is unavailable but CoinPaprika is available.",
-        "Crypto live quotes and historical charts render with non-zero values when CoinGecko endpoints are unavailable but CoinPaprika is available.",
-        "The existing per-symbol live quote cache behavior remains intact: if a refresh partially fails, previously cached successful quotes are still returned for those symbols until a new successful fetch updates them."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/lib/symbols.ts",
-          "operation": "modify",
-          "description": "Make crypto parsers resilient to backend-returned JSON from either primary or fallback provider: update parseCryptoSearch, parseCryptoLivePrice, and parseCryptoHistorical to recognize multiple valid response shapes and validate required fields; on invalid/missing data, throw (or otherwise signal failure) instead of returning zero/empty placeholders that could overwrite cached successful values."
-        },
-        {
-          "path": "frontend/src/hooks/useMarketData.ts",
-          "operation": "modify",
-          "description": "Adjust crypto fetch flows to align with the updated parsers: treat invalid/missing crypto responses as failures so Promise.allSettled correctly preserves the existing liveQuoteCache (do not update cache with zero/invalid quotes), and ensure search and historical hooks correctly consume the more flexible parser outputs without changing UI behavior."
-        }
-      ]
-    }
-  ]
+  "title": "Portfolio Tracker — Frontend impact review (no changes required)",
+  "requirements": []
 }

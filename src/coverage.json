@@ -1,52 +1,35 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-17T18:03:48.551Z",
+  "generatedAt": "2026-02-17T18:13:06.757Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 2,
+    "total": 3,
+    "implemented": 0,
     "items": [
       {
-        "id": "REQ-4",
-        "summary": "Implement an automatic fallback to CoinPaprika for all crypto market-data HTTP outcalls when CoinGecko requests fail (network error, non-2xx response, invalid JSON, or missing expected fields), while keeping CoinGecko as the primary source.",
+        "id": "REQ-1",
+        "summary": "Update the backend so portfolio retrieval returns price data for every holding in every returned portfolio (not just a single holding), by enriching holdings on the backend before returning them.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-5",
-        "summary": "Use CoinPaprika as the fallback provider and support automatic switching back to CoinGecko on subsequent requests once CoinGecko becomes available again (no sticky fallback mode).",
+        "id": "REQ-2",
+        "summary": "Apply the same backend holding price enrichment behavior to public portfolio reads so getPublicPortfolio returns holdings with price data for every holding.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-6",
-        "summary": "Keep fallback usage silent in the UI: do not display alerts, banners, toasts, or other user-facing indicators when CoinPaprika data is being used.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useMarketData.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useMarketData.ts"
-        ]
-      },
-      {
-        "id": "REQ-7",
-        "summary": "Update the frontend crypto parsing/market-data layer to correctly handle the backend’s fallback responses for crypto search, live price, and historical data, while preserving the existing cached-live-quote behavior (keep last successful per-symbol quote on partial failures).",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/lib/symbols.ts",
-          "frontend/src/hooks/useMarketData.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/lib/symbols.ts",
-          "frontend/src/hooks/useMarketData.ts"
-        ]
+        "id": "REQ-3",
+        "summary": "Ensure backend enrichment is efficient and reliable when fetching prices for multiple holdings, and that partial failures do not prevent other holdings from being enriched and returned.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },
@@ -54,10 +37,11 @@
     "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
-    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/hooks/useMarketData.ts",
-    "frontend/src/lib/symbols.ts",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

@@ -1,104 +1,77 @@
 {
   "kind": "build_request",
-  "title": "Add CoinPaprika fallback for crypto market data when CoinGecko is unavailable",
+  "title": "Fix backend pricing enrichment so every holding returns price data",
   "projectName": "Portfolio Tracker",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-4",
-      "text": "Implement an automatic fallback to CoinPaprika for all crypto market-data HTTP outcalls when CoinGecko requests fail (network error, non-2xx response, invalid JSON, or missing expected fields), while keeping CoinGecko as the primary source.",
+      "id": "REQ-1",
+      "text": "Update the backend so portfolio retrieval returns price data for every holding in every returned portfolio (not just a single holding), by enriching holdings on the backend before returning them.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-3"
+          "msg-1"
         ],
         "quotes": [
-          "If we don't get any data from CoinGecko, we should use an alternate source as a fallback"
+          "It returns all holdings but the price data only appears for one holding.",
+          "Each holding should have price data",
+          "1. Backend"
         ]
       },
       "acceptanceCriteria": [
-        "When CoinGecko is reachable and returns valid data, the backend uses CoinGecko responses (CoinPaprika is not called).",
-        "When CoinGecko fails for a crypto request (live price, historical chart, or search), the backend retries using CoinPaprika and returns usable data to the frontend.",
-        "Fallback logic is implemented for all existing crypto endpoints used by the frontend: searchCryptoTickers, getCryptoLivePrice, and getCryptoHistoricalData."
+        "Calling getPortfolios returns the same portfolios/holdings list as before, but each holding includes populated currentPrice fields (price, change, changePercent, currency).",
+        "Price enrichment is applied to every holding in every portfolio returned by getPortfolios, not just the first holding.",
+        "The enrichment logic works for portfolios containing multiple holdings (e.g., 3+ tickers) and does not stop after enriching one holding."
       ]
     },
     {
-      "id": "REQ-5",
-      "text": "Use CoinPaprika as the fallback provider and support automatic switching back to CoinGecko on subsequent requests once CoinGecko becomes available again (no sticky fallback mode).",
+      "id": "REQ-2",
+      "text": "Apply the same backend holding price enrichment behavior to public portfolio reads so getPublicPortfolio returns holdings with price data for every holding.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-1"
         ],
         "quotes": [
-          "1. Suggest a reliable, free one 2. yes"
+          "Each holding should have price data",
+          "1. Backend"
         ]
       },
       "acceptanceCriteria": [
-        "CoinPaprika is the only fallback provider added.",
-        "Each crypto request attempts CoinGecko first; if CoinGecko succeeds after a prior failure, the backend serves CoinGecko data again without requiring a restart or manual action."
+        "Calling getPublicPortfolio for a public portfolio returns holdings where every holding includes populated currentPrice fields.",
+        "Authorization/public-privacy rules remain unchanged (non-public portfolios still trap as before)."
       ]
     },
     {
-      "id": "REQ-6",
-      "text": "Keep fallback usage silent in the UI: do not display alerts, banners, toasts, or other user-facing indicators when CoinPaprika data is being used.",
-      "target": "frontend",
+      "id": "REQ-3",
+      "text": "Ensure backend enrichment is efficient and reliable when fetching prices for multiple holdings, and that partial failures do not prevent other holdings from being enriched and returned.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "msg-1"
         ],
         "quotes": [
-          "3. no"
+          "whatever is most efficient and reliable."
         ]
       },
       "acceptanceCriteria": [
-        "No new UI elements are added to indicate fallback usage.",
-        "Existing UI behavior remains unchanged except that crypto quotes/search/history continue working during CoinGecko outages."
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Update the frontend crypto parsing/market-data layer to correctly handle the backend’s fallback responses for crypto search, live price, and historical data, while preserving the existing cached-live-quote behavior (keep last successful per-symbol quote on partial failures).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-3",
-          "msg-5"
-        ],
-        "quotes": [
-          "If we don't get any data from CoinGecko, we should use an alternate source as a fallback",
-          "1. Suggest a reliable, free one 2. yes, 3. no"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Crypto search results continue to populate when CoinGecko search is unavailable but CoinPaprika is available.",
-        "Crypto live quotes and historical charts render with non-zero values when CoinGecko endpoints are unavailable but CoinPaprika is available.",
-        "The existing per-symbol live quote cache behavior remains intact: if a refresh partially fails, previously cached successful quotes are still returned for those symbols until a new successful fetch updates them."
+        "If one holding’s external price lookup fails, the backend still returns the full portfolios response and still enriches other holdings that can be priced.",
+        "The backend does not trap solely due to a single holding’s price fetch failing (unless an existing authorization/validation rule is violated).",
+        "Crypto price lookups continue to use the existing primary+fallback behavior (CoinGecko with CoinPaprika fallback) without introducing any user-facing indicators."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo; do not introduce additional backend services.",
-    "Do not edit files under frontend/src/components/ui or any paths listed as immutable in SYSTEM_CONTEXT.",
-    "Do not add user-facing alerts/notifications for fallback usage."
+    "Keep all Motoko logic within the single backend actor in backend/main.mo (single-actor architecture).",
+    "Use English for any user-facing text returned by the backend (e.g., trap messages)."
   ],
   "nonGoals": [
-    "Adding third-party authentication beyond Internet Identity.",
-    "Adding a new database or any external data store.",
-    "Adding real-time updates via WebSockets or push notifications."
+    "Do not move price enrichment to the frontend.",
+    "Do not add new third-party providers beyond the existing Yahoo Finance outcalls and CoinGecko/CoinPaprika crypto fallback.",
+    "Do not introduce UI alerts/banners/toasts related to fallback usage."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

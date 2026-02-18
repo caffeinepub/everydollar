@@ -80,11 +80,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getPortfolios' : IDL.Func([], [IDL.Vec(Portfolio)], []),
-  'getPublicPortfolio' : IDL.Func(
-      [IDL.Principal, IDL.Text],
-      [Portfolio],
-      ['query'],
-    ),
+  'getPublicPortfolio' : IDL.Func([IDL.Principal, IDL.Text], [Portfolio], []),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -176,11 +172,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getPortfolios' : IDL.Func([], [IDL.Vec(Portfolio)], []),
-    'getPublicPortfolio' : IDL.Func(
-        [IDL.Principal, IDL.Text],
-        [Portfolio],
-        ['query'],
-      ),
+    'getPublicPortfolio' : IDL.Func([IDL.Principal, IDL.Text], [Portfolio], []),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],

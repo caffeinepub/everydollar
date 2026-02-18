@@ -1,46 +1,4 @@
 {
   "kind": "feature_evidence_report",
-  "features": [
-    {
-      "featureId": "feature-keep-fallback-usage-silent-in-the-ui-do-not-display-alerts-banners-toasts-or-other-user-facing-indicators-when-coinpaprika-data-is-being-used",
-      "featureTitle": "Keep fallback usage silent in the UI: do not display alerts, banners, toasts, or other user-facing indicators when CoinPaprika data is being used.",
-      "files": [
-        "frontend/src/hooks/useMarketData.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-6"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-update-the-frontend-crypto-parsing-market-data-layer-to-correctly-handle-the-backend-s-fallback-responses-for-crypto-search-live-price-and-historical-data-while-preserving-the-existing-cached-live-quote-behavior-keep-last-successful-per-symbol-quote-on-partial-failures",
-      "featureTitle": "Update the frontend crypto parsing/market-data layer to correctly handle the backend’s fallback responses for crypto search, live price, and historical data, while preserving the existing cached-live-quote behavior (keep last successful per-symbol quote on partial failures).",
-      "files": [
-        "frontend/src/hooks/useMarketData.ts",
-        "frontend/src/lib/symbols.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "http-outcalls@3.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-7"
-      ],
-      "confidence": "high"
-    }
-  ]
+  "features": []
 }
